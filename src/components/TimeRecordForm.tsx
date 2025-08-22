@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { clientStorageUtils } from '@/lib/client-storage';
 import { timeUtils } from '@/lib/calculations';
 import UserSettingsModal from './UserSettingsModal';
@@ -21,17 +21,20 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isMultipleMode, setIsMultipleMode] = useState(false);
+  const [multipleDays, setMultipleDays] = useState<Array<{
+    date: string;
+    startTime: string;
+    endTime: string;
+    type: 'work' | 'time_off';
+  }>>([]);
   const [userSettings, setUserSettings] = useState<{
     defaultStartTime: string | null;
     defaultEndTime: string | null;
     workingDays: 'weekdays' | 'all' | 'weekends';
   } | null>(null);
 
-  useEffect(() => {
-    loadUserSettings();
-  }, [userId]);
-
-  const loadUserSettings = async () => {
+  const loadUserSettings = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -51,7 +54,11 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     } catch (error) {
       console.error('Error loading user settings:', error);
     }
-  };
+  }, [userId, formData.startTime, formData.endTime]);
+
+  useEffect(() => {
+    loadUserSettings();
+  }, [loadUserSettings]);
 
   const isDateAllowed = (dateStr: string): boolean => {
     if (!userSettings) return true;
@@ -73,31 +80,56 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.date) {
-      newErrors.date = 'Data é obrigatória';
-    } else if (!isDateAllowed(formData.date)) {
-      const workingDaysText = userSettings?.workingDays === 'weekdays' 
-        ? 'dias de semana' 
-        : userSettings?.workingDays === 'weekends' 
-        ? 'finais de semana' 
-        : 'todos os dias';
-      newErrors.date = `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}`;
-    }
+    if (isMultipleMode) {
+      if (multipleDays.length === 0) {
+        newErrors.submit = 'Adicione pelo menos um dia para registrar';
+      } else {
+        // Validar cada dia no modo múltiplo
+        multipleDays.forEach((day, index) => {
+          if (!day.date) {
+            newErrors[`day_${index}_date`] = 'Data é obrigatória';
+          } else if (!isDateAllowed(day.date)) {
+            newErrors[`day_${index}_date`] = 'Data não permitida pelas suas configurações';
+          }
+          if (!day.startTime) {
+            newErrors[`day_${index}_startTime`] = 'Horário de início obrigatório';
+          }
+          if (!day.endTime) {
+            newErrors[`day_${index}_endTime`] = 'Horário de fim obrigatório';
+          }
+          if (day.startTime && day.endTime && !timeUtils.isValidTimeRange(day.startTime, day.endTime)) {
+            newErrors[`day_${index}_endTime`] = 'Horário inválido';
+          }
+        });
+      }
+    } else {
+      // Validação do modo único
+      if (!formData.date) {
+        newErrors.date = 'Data é obrigatória';
+      } else if (!isDateAllowed(formData.date)) {
+        const workingDaysText = userSettings?.workingDays === 'weekdays' 
+          ? 'dias de semana' 
+          : userSettings?.workingDays === 'weekends' 
+          ? 'finais de semana' 
+          : 'todos os dias';
+        newErrors.date = `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}`;
+      }
 
-    if (!formData.startTime) {
-      newErrors.startTime = 'Horário de início é obrigatório';
-    } else if (!timeUtils.isValidTimeFormat(formData.startTime)) {
-      newErrors.startTime = 'Formato inválido (use HH:MM)';
-    }
+      if (!formData.startTime) {
+        newErrors.startTime = 'Horário de início é obrigatório';
+      } else if (!timeUtils.isValidTimeFormat(formData.startTime)) {
+        newErrors.startTime = 'Formato inválido (use HH:MM)';
+      }
 
-    if (!formData.endTime) {
-      newErrors.endTime = 'Horário de término é obrigatório';
-    } else if (!timeUtils.isValidTimeFormat(formData.endTime)) {
-      newErrors.endTime = 'Formato inválido (use HH:MM)';
-    }
+      if (!formData.endTime) {
+        newErrors.endTime = 'Horário de término é obrigatório';
+      } else if (!timeUtils.isValidTimeFormat(formData.endTime)) {
+        newErrors.endTime = 'Formato inválido (use HH:MM)';
+      }
 
-    if (formData.startTime && formData.endTime && !timeUtils.isValidTimeRange(formData.startTime, formData.endTime)) {
-      newErrors.endTime = 'Horário de término deve ser diferente do início';
+      if (formData.startTime && formData.endTime && !timeUtils.isValidTimeRange(formData.startTime, formData.endTime)) {
+        newErrors.endTime = 'Horário de término deve ser diferente do início';
+      }
     }
 
     setErrors(newErrors);
@@ -114,43 +146,87 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     setIsSubmitting(true);
 
     try {
-      const record = timeUtils.createTimeRecord(
-        userId || '',
-        userName || 'Usuário',
-        formData.date,
-        formData.startTime,
-        formData.endTime,
-        formData.type
-      );
+      if (isMultipleMode) {
+        // Salvar múltiplos registros
+        const validDays = multipleDays.filter(day => 
+          day.date && day.startTime && day.endTime && 
+          timeUtils.isValidTimeRange(day.startTime, day.endTime) &&
+          isDateAllowed(day.date)
+        );
 
-      await clientStorageUtils.saveTimeRecord(record);
+        for (const day of validDays) {
+          const record = timeUtils.createTimeRecord(
+            userId || '',
+            userName || 'Usuário',
+            day.date,
+            day.startTime,
+            day.endTime,
+            day.type
+          );
 
-      // Se for folga, criar uma conversão automática para deduzir do banco de horas
-      if (record.type === 'time_off') {
-        try {
-          const conversion = {
-            id: timeUtils.generateId(),
-            userId: userId || '',
-            hours: record.totalHours,
-            amount: 0,
-            type: 'time_off' as 'money' | 'time_off',
-            date: record.date,
-            createdAt: new Date().toISOString(),
-          };
-          await clientStorageUtils.saveHourConversion(conversion);
-        } catch (error) {
-          console.error('Error saving hour conversion for time off:', error);
-          // Não interromper o fluxo se houver erro na conversão
+          await clientStorageUtils.saveTimeRecord(record);
+
+          // Se for folga, criar conversão automática
+          if (record.type === 'time_off') {
+            try {
+              const conversion = {
+                id: timeUtils.generateId(),
+                userId: userId || '',
+                hours: record.totalHours,
+                amount: 0,
+                type: 'time_off' as 'money' | 'time_off',
+                date: record.date,
+                createdAt: new Date().toISOString(),
+              };
+              await clientStorageUtils.saveHourConversion(conversion);
+            } catch (error) {
+              console.error('Error saving hour conversion for time off:', error);
+            }
+          }
         }
-      }
 
-      // Reset form
-      setFormData({
-        date: timeUtils.getCurrentDate(),
-        startTime: '',
-        endTime: '',
-        type: 'work' as 'work' | 'time_off',
-      });
+        // Reset multiple days
+        setMultipleDays([]);
+      } else {
+        // Salvar registro único
+        const record = timeUtils.createTimeRecord(
+          userId || '',
+          userName || 'Usuário',
+          formData.date,
+          formData.startTime,
+          formData.endTime,
+          formData.type
+        );
+
+        await clientStorageUtils.saveTimeRecord(record);
+
+        // Se for folga, criar uma conversão automática para deduzir do banco de horas
+        if (record.type === 'time_off') {
+          try {
+            const conversion = {
+              id: timeUtils.generateId(),
+              userId: userId || '',
+              hours: record.totalHours,
+              amount: 0,
+              type: 'time_off' as 'money' | 'time_off',
+              date: record.date,
+              createdAt: new Date().toISOString(),
+            };
+            await clientStorageUtils.saveHourConversion(conversion);
+          } catch (error) {
+            console.error('Error saving hour conversion for time off:', error);
+            // Não interromper o fluxo se houver erro na conversão
+          }
+        }
+
+        // Reset form
+        setFormData({
+          date: timeUtils.getCurrentDate(),
+          startTime: '',
+          endTime: '',
+          type: 'work' as 'work' | 'time_off',
+        });
+      }
 
       onRecordAdded?.();
     } catch (error) {
@@ -159,6 +235,26 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getWeekdayName = (dateStr: string): string => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    return weekdays[date.getDay()];
+  };
+
+  const getDateRestrictions = (): { min?: string; max?: string } => {
+    if (!userSettings || userSettings.workingDays === 'all') return {};
+    
+    // Restringir para os próximos 30 dias baseado na configuração
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + 30);
+    
+    return {
+      min: today.toISOString().split('T')[0],
+      max: maxDate.toISOString().split('T')[0]
+    };
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -194,91 +290,257 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
-            Data
-          </label>
-          <input
-            type="date"
-            id="date"
-            value={formData.date}
-            onChange={(e) => handleInputChange('date', e.target.value)}
-            className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-              errors.date ? 'border-red-500' : 'border-gray-600'
-            }`}
-          />
-          {errors.date && <p className="text-red-400 text-sm mt-1">{errors.date}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
-            Tipo de Registro
-          </label>
-          <select
-            id="type"
-            value={formData.type}
-            onChange={(e) => handleInputChange('type', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
-          >
-            <option value="work">🏢 Trabalho Normal</option>
-            <option value="time_off">🏖️ Folga (desconta horas extras)</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="startTime" className="block text-sm font-medium text-gray-300 mb-2">
-              Horário de Início
+        {/* Modo de Registro */}
+        <div className="bg-gray-700 rounded-md p-4 mb-4 border border-gray-600">
+          <p className="text-sm font-medium text-gray-300 mb-3">Modo de Registro:</p>
+          <div className="flex space-x-4">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                checked={!isMultipleMode}
+                onChange={() => setIsMultipleMode(false)}
+                className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+              />
+              <span className="text-gray-300">📅 Registro Único</span>
             </label>
-            <input
-              type="time"
-              id="startTime"
-              value={formData.startTime}
-              onChange={(e) => handleInputChange('startTime', e.target.value)}
-              className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                errors.startTime ? 'border-red-500' : 'border-gray-600'
-              }`}
-            />
-            {errors.startTime && <p className="text-red-400 text-sm mt-1">{errors.startTime}</p>}
-          </div>
-
-          <div>
-            <label htmlFor="endTime" className="block text-sm font-medium text-gray-300 mb-2">
-              Horário de Término
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="radio"
+                checked={isMultipleMode}
+                onChange={() => setIsMultipleMode(true)}
+                className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+              />
+              <span className="text-gray-300">📋 Múltiplos Dias</span>
             </label>
-            <input
-              type="time"
-              id="endTime"
-              value={formData.endTime}
-              onChange={(e) => handleInputChange('endTime', e.target.value)}
-              className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                errors.endTime ? 'border-red-500' : 'border-gray-600'
-              }`}
-            />
-            {errors.endTime && <p className="text-red-400 text-sm mt-1">{errors.endTime}</p>}
           </div>
         </div>
 
-        {formData.startTime && formData.endTime && timeUtils.isValidTimeRange(formData.startTime, formData.endTime) && (
-          <div className="bg-blue-900/50 border border-blue-700 rounded-md p-3">
-            <p className="text-blue-300 text-sm">
-              <strong>Horas calculadas:</strong> {timeUtils.formatHours(
-                timeUtils.calculateHoursDifference(formData.startTime, formData.endTime)
+        {!isMultipleMode ? (
+          // Modo único
+          <>
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
+                Data
+              </label>
+              <input
+                type="date"
+                id="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                {...getDateRestrictions()}
+                className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                  errors.date ? 'border-red-500' : 'border-gray-600'
+                }`}
+              />
+              {formData.date && (
+                <p className="text-blue-300 text-sm mt-1">
+                  📅 {getWeekdayName(formData.date)}
+                </p>
               )}
-            </p>
+              {errors.date && <p className="text-red-400 text-sm mt-1">{errors.date}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
+                Tipo de Registro
+              </label>
+              <select
+                id="type"
+                value={formData.type}
+                onChange={(e) => handleInputChange('type', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+              >
+                <option value="work">🏢 Trabalho Normal</option>
+                <option value="time_off">🏖️ Folga (desconta horas extras)</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="startTime" className="block text-sm font-medium text-gray-300 mb-2">
+                  Horário de Início
+                </label>
+                <input
+                  type="time"
+                  id="startTime"
+                  value={formData.startTime}
+                  onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                    errors.startTime ? 'border-red-500' : 'border-gray-600'
+                  }`}
+                />
+                {errors.startTime && <p className="text-red-400 text-sm mt-1">{errors.startTime}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="endTime" className="block text-sm font-medium text-gray-300 mb-2">
+                  Horário de Término
+                </label>
+                <input
+                  type="time"
+                  id="endTime"
+                  value={formData.endTime}
+                  onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                    errors.endTime ? 'border-red-500' : 'border-gray-600'
+                  }`}
+                />
+                {errors.endTime && <p className="text-red-400 text-sm mt-1">{errors.endTime}</p>}
+              </div>
+            </div>
+
+            {formData.startTime && formData.endTime && timeUtils.isValidTimeRange(formData.startTime, formData.endTime) && (
+              <div className="bg-blue-900/50 border border-blue-700 rounded-md p-3">
+                <p className="text-blue-300 text-sm">
+                  <strong>Horas calculadas:</strong> {timeUtils.formatHours(
+                    timeUtils.calculateHoursDifference(formData.startTime, formData.endTime)
+                  )}
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          // Modo múltiplo
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-300">
+                Registro Múltiplo
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const newDay = {
+                    date: timeUtils.getCurrentDate(),
+                    startTime: userSettings?.defaultStartTime || '',
+                    endTime: userSettings?.defaultEndTime || '',
+                    type: 'work' as 'work' | 'time_off'
+                  };
+                  setMultipleDays(prev => [...prev, newDay]);
+                }}
+                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                + Adicionar Dia
+              </button>
+            </div>
+
+            {multipleDays.length === 0 ? (
+              <div className="text-center py-8 bg-gray-700 rounded-md border border-gray-600">
+                <p className="text-gray-400">Clique em &quot;Adicionar Dia&quot; para começar</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {multipleDays.map((day, index) => (
+                  <div key={index} className="bg-gray-700 rounded-md p-4 border border-gray-600">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          Data
+                        </label>
+                        <input
+                          type="date"
+                          value={day.date}
+                          onChange={(e) => {
+                            const newMultipleDays = [...multipleDays];
+                            newMultipleDays[index].date = e.target.value;
+                            setMultipleDays(newMultipleDays);
+                          }}
+                          {...getDateRestrictions()}
+                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                        />
+                        {day.date && (
+                          <p className="text-blue-300 text-xs mt-1">
+                            {getWeekdayName(day.date)}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          Início
+                        </label>
+                        <input
+                          type="time"
+                          value={day.startTime}
+                          onChange={(e) => {
+                            const newMultipleDays = [...multipleDays];
+                            newMultipleDays[index].startTime = e.target.value;
+                            setMultipleDays(newMultipleDays);
+                          }}
+                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                          Fim
+                        </label>
+                        <input
+                          type="time"
+                          value={day.endTime}
+                          onChange={(e) => {
+                            const newMultipleDays = [...multipleDays];
+                            newMultipleDays[index].endTime = e.target.value;
+                            setMultipleDays(newMultipleDays);
+                          }}
+                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                        />
+                      </div>
+                      <div className="flex space-x-1">
+                        <select
+                          value={day.type}
+                          onChange={(e) => {
+                            const newMultipleDays = [...multipleDays];
+                            newMultipleDays[index].type = e.target.value as 'work' | 'time_off';
+                            setMultipleDays(newMultipleDays);
+                          }}
+                          className="flex-1 px-2 py-1 text-xs bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                        >
+                          <option value="work">🏢</option>
+                          <option value="time_off">🏖️</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newMultipleDays = multipleDays.filter((_, i) => i !== index);
+                            setMultipleDays(newMultipleDays);
+                          }}
+                          className="px-2 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                    {day.startTime && day.endTime && timeUtils.isValidTimeRange(day.startTime, day.endTime) && (
+                      <div className="mt-2 text-xs text-blue-300">
+                        💡 {timeUtils.formatHours(timeUtils.calculateHoursDifference(day.startTime, day.endTime))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {errors.submit && (
+          <div className="bg-red-900/50 border border-red-700 rounded-md p-3">
+            <p className="text-red-300 text-sm">{errors.submit}</p>
           </div>
         )}
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (isMultipleMode && multipleDays.length === 0)}
           className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-            isSubmitting
+            isSubmitting || (isMultipleMode && multipleDays.length === 0)
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
-          {isSubmitting ? 'Salvando...' : 'Registrar Horas'}
+          {isSubmitting 
+            ? 'Salvando...' 
+            : isMultipleMode 
+            ? `Registrar ${multipleDays.length} Dia${multipleDays.length !== 1 ? 's' : ''}`
+            : 'Registrar Horas'
+          }
         </button>
       </form>
 

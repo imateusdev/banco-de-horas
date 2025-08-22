@@ -70,17 +70,18 @@ export default function UserDashboard() {
       <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleBackToUsers}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                ← Voltar
-              </button>
-              <h1 className="text-2xl font-bold text-white">
-                👤 {user.name}
-              </h1>
-            </div>
+            <button
+              onClick={handleBackToUsers}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              ← Voltar
+            </button>
+            
+            <h1 className="text-2xl font-bold text-white text-center flex-1">
+              👤 {user.name}
+            </h1>
+            
+            <div className="w-16"></div> {/* Spacer para balanceamento */}
           </div>
         </div>
       </header>
