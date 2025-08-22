@@ -41,6 +41,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       const response = await fetch(`/api/user-settings?userId=${userId}`);
       if (response.ok) {
         const settings = await response.json();
+        console.log('Configurações carregadas:', settings); // Debug
         setUserSettings(settings);
         
         // Pré-preencher horários padrão se existirem e os campos estiverem vazios
@@ -61,10 +62,15 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   }, [loadUserSettings]);
 
   const isDateAllowed = (dateStr: string): boolean => {
-    if (!userSettings) return true;
+    if (!userSettings) {
+      console.log('userSettings não carregadas ainda'); // Debug
+      return true;
+    }
     
     const date = new Date(dateStr + 'T00:00:00');
     const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    console.log(`Verificando data ${dateStr}, dia da semana: ${dayOfWeek}, configuração: ${userSettings.workingDays}`); // Debug
     
     switch (userSettings.workingDays) {
       case 'weekdays':
@@ -244,17 +250,23 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   };
 
   const getDateRestrictions = (): { min?: string; max?: string } => {
-    if (!userSettings || userSettings.workingDays === 'all') return {};
-    
-    // Restringir para os próximos 30 dias baseado na configuração
+    // Permitir registrar até 30 dias no passado e 30 dias no futuro
     const today = new Date();
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() - 30);
     const maxDate = new Date(today);
     maxDate.setDate(today.getDate() + 30);
     
     return {
-      min: today.toISOString().split('T')[0],
+      min: minDate.toISOString().split('T')[0],
       max: maxDate.toISOString().split('T')[0]
     };
+  };
+
+  // Função para validar se a data está desabilitada (apenas no frontend)
+  const isDateDisabled = (dateStr: string): boolean => {
+    if (!userSettings) return false;
+    return !isDateAllowed(dateStr);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -286,6 +298,16 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         <p className="text-blue-300 text-sm">
           <span className="font-semibold">👤 Registrando para:</span> {userName || 'Usuário'}
         </p>
+        {userSettings && (
+          <p className="text-xs text-gray-400 mt-2">
+            ⚙️ Configuração: {userSettings.workingDays === 'weekdays' ? 'Segunda a Sexta' : userSettings.workingDays === 'weekends' ? 'Finais de Semana' : 'Todos os dias'}
+            {userSettings.defaultStartTime && userSettings.defaultEndTime && (
+              <span className="ml-2">
+                | 🕐 {userSettings.defaultStartTime} - {userSettings.defaultEndTime}
+              </span>
+            )}
+          </p>
+        )}
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -321,20 +343,53 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             <div>
               <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
                 Data
+                {userSettings && userSettings.workingDays !== 'all' && (
+                  <span className="ml-2 text-xs text-yellow-400">
+                    ({userSettings.workingDays === 'weekdays' ? 'Segunda a Sexta' : 'Finais de Semana'})
+                  </span>
+                )}
               </label>
               <input
                 type="date"
                 id="date"
                 value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  handleInputChange('date', newDate);
+                  
+                  // Validar imediatamente se a data é permitida
+                  if (newDate && !isDateAllowed(newDate)) {
+                    const workingDaysText = userSettings?.workingDays === 'weekdays' 
+                      ? 'dias de semana (Segunda a Sexta)' 
+                      : userSettings?.workingDays === 'weekends' 
+                      ? 'finais de semana (Sábado e Domingo)' 
+                      : 'todos os dias';
+                    setErrors(prev => ({ 
+                      ...prev, 
+                      date: `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}` 
+                    }));
+                  } else {
+                    // Limpar erro se a data for válida
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.date;
+                      return newErrors;
+                    });
+                  }
+                }}
                 {...getDateRestrictions()}
                 className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                  errors.date ? 'border-red-500' : 'border-gray-600'
+                  errors.date ? 'border-red-500' : isDateDisabled(formData.date) ? 'border-yellow-500' : 'border-gray-600'
                 }`}
               />
               {formData.date && (
-                <p className="text-blue-300 text-sm mt-1">
+                <p className={`text-sm mt-1 ${
+                  isDateDisabled(formData.date) ? 'text-yellow-400' : 'text-blue-300'
+                }`}>
                   📅 {getWeekdayName(formData.date)}
+                  {isDateDisabled(formData.date) && (
+                    <span className="ml-2 text-yellow-400">⚠️ Dia não configurado para trabalho</span>
+                  )}
                 </p>
               )}
               {errors.date && <p className="text-red-400 text-sm mt-1">{errors.date}</p>}
@@ -435,6 +490,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                       <div>
                         <label className="block text-xs font-medium text-gray-300 mb-1">
                           Data
+                          {userSettings && userSettings.workingDays !== 'all' && (
+                            <span className="ml-1 text-yellow-400">*</span>
+                          )}
                         </label>
                         <input
                           type="date"
@@ -445,11 +503,18 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             setMultipleDays(newMultipleDays);
                           }}
                           {...getDateRestrictions()}
-                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                          className={`w-full px-2 py-1 text-sm bg-gray-600 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white ${
+                            day.date && isDateDisabled(day.date) ? 'border-yellow-500' : 'border-gray-500'
+                          }`}
                         />
                         {day.date && (
-                          <p className="text-blue-300 text-xs mt-1">
+                          <p className={`text-xs mt-1 ${
+                            isDateDisabled(day.date) ? 'text-yellow-400' : 'text-blue-300'
+                          }`}>
                             {getWeekdayName(day.date)}
+                            {isDateDisabled(day.date) && (
+                              <span className="block text-yellow-400">⚠️ Não permitido</span>
+                            )}
                           </p>
                         )}
                       </div>
