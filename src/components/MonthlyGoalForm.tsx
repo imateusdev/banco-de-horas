@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { clientStorageUtils } from '@/lib/client-storage';
 import { timeUtils } from '@/lib/calculations';
+import { generateUUID } from '@/lib/uuid';
 
 interface MonthlyGoalFormProps {
   onGoalUpdated?: () => void;
@@ -53,7 +54,7 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
     try {
       if (userId) {
         await clientStorageUtils.saveMonthlyGoal({
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           userId,
           month,
           hoursGoal: goalValue,
@@ -61,7 +62,7 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
         });
       } else {
         await clientStorageUtils.saveMonthlyGoal({
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           userId: 'default', // Para compatibilidade com o sistema antigo
           month,
           hoursGoal: goalValue,
