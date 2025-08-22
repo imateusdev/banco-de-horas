@@ -81,9 +81,6 @@ export default function UserDashboard() {
                 👤 {user.name}
               </h1>
             </div>
-            <div className="text-sm text-gray-300">
-              /{userSlug}
-            </div>
           </div>
         </div>
       </header>

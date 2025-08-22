@@ -20,6 +20,7 @@ model User {
   timeRecords     TimeRecord[]
   monthlyGoals    MonthlyGoal[]
   hourConversions HourConversion[]
+  settings        UserSettings?
   
   @@map("users")
 }
@@ -72,4 +73,19 @@ model HourConversion {
   
   @@map("hour_conversions")
   @@index([userId])
+}
+
+model UserSettings {
+  id               String   @id @default(cuid())
+  userId           String   @unique @map("user_id")
+  defaultStartTime String?  @map("default_start_time") // Horário padrão de entrada (ex: "09:00")
+  defaultEndTime   String?  @map("default_end_time")   // Horário padrão de saída (ex: "18:00")
+  workingDays      String   @default("weekdays") @map("working_days") // "weekdays", "all", "weekends"
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  
+  // Relationship
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_settings")
 }

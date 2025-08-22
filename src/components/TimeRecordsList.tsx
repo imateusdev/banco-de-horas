@@ -14,7 +14,6 @@ interface TimeRecordsListProps {
 export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userId }: TimeRecordsListProps) {
   const [records, setRecords] = useState<TimeRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<TimeRecord[]>([]);
-  const [filterName, setFilterName] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<TimeRecord>>({});
@@ -45,12 +44,6 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
   useEffect(() => {
     let filtered = records;
 
-    if (filterName) {
-      filtered = filtered.filter(record =>
-        record.name.toLowerCase().includes(filterName.toLowerCase())
-      );
-    }
-
     if (filterMonth) {
       filtered = filtered.filter(record =>
         record.date.startsWith(filterMonth)
@@ -58,7 +51,7 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
     }
 
     setFilteredRecords(filtered);
-  }, [records, filterName, filterMonth]);
+  }, [records, filterMonth]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este registro?')) {
@@ -107,6 +100,14 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
     return date.toLocaleDateString('pt-BR');
   };
 
+  const formatDateWithWeekday = (dateStr: string): string => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const weekday = weekdays[date.getDay()];
+    const formattedDate = date.toLocaleDateString('pt-BR');
+    return `${formattedDate} - ${weekday}`;
+  };
+
   const formatDateTime = (dateTimeStr: string): string => {
     const date = new Date(dateTimeStr);
     return date.toLocaleString('pt-BR');
@@ -131,20 +132,7 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
       <h2 className="text-2xl font-bold text-white mb-6">Histórico de Registros</h2>
 
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Filtrar por nome
-          </label>
-          <input
-            type="text"
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-            placeholder="Digite um nome..."
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400"
-          />
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Filtrar por mês
@@ -174,7 +162,6 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
         <div className="flex items-end">
           <button
             onClick={() => {
-              setFilterName('');
               setFilterMonth('');
             }}
             className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
@@ -186,7 +173,7 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
 
       {/* Resumo */}
       <div className="bg-gray-700 rounded-md p-4 mb-6 border border-gray-600">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-blue-400">{filteredRecords.length}</p>
             <p className="text-sm text-gray-400">Registros</p>
@@ -194,10 +181,6 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
           <div>
             <p className="text-2xl font-bold text-purple-400">{timeUtils.formatHours(getTotalHours())}</p>
             <p className="text-sm text-gray-400">Total de Horas</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-green-400">{getUniqueNames().length}</p>
-            <p className="text-sm text-gray-400">Pessoas</p>
           </div>
         </div>
       </div>
@@ -306,7 +289,7 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
                           {record.type === 'time_off' ? '🏖️ Folga' : '🏢 Trabalho'}
                         </span>
                       </div>
-                      <p className="text-gray-400">{formatDate(record.date)}</p>
+                      <p className="text-gray-400">{formatDateWithWeekday(record.date)}</p>
                     </div>
                     <div className="text-right">
                       <p className={`text-2xl font-bold ${

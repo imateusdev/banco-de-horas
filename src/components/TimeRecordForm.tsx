@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { clientStorageUtils } from '@/lib/client-storage';
 import { timeUtils } from '@/lib/calculations';
+import UserSettingsModal from './UserSettingsModal';
 
 interface TimeRecordFormProps {
   onRecordAdded?: () => void;
@@ -19,12 +20,68 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [userSettings, setUserSettings] = useState<{
+    defaultStartTime: string | null;
+    defaultEndTime: string | null;
+    workingDays: 'weekdays' | 'all' | 'weekends';
+  } | null>(null);
+
+  useEffect(() => {
+    loadUserSettings();
+  }, [userId]);
+
+  const loadUserSettings = async () => {
+    if (!userId) return;
+    
+    try {
+      const response = await fetch(`/api/user-settings?userId=${userId}`);
+      if (response.ok) {
+        const settings = await response.json();
+        setUserSettings(settings);
+        
+        // Pré-preencher horários padrão se existirem e os campos estiverem vazios
+        if (settings.defaultStartTime && !formData.startTime) {
+          setFormData(prev => ({ ...prev, startTime: settings.defaultStartTime }));
+        }
+        if (settings.defaultEndTime && !formData.endTime) {
+          setFormData(prev => ({ ...prev, endTime: settings.defaultEndTime }));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user settings:', error);
+    }
+  };
+
+  const isDateAllowed = (dateStr: string): boolean => {
+    if (!userSettings) return true;
+    
+    const date = new Date(dateStr + 'T00:00:00');
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    switch (userSettings.workingDays) {
+      case 'weekdays':
+        return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
+      case 'weekends':
+        return dayOfWeek === 0 || dayOfWeek === 6; // Saturday and Sunday
+      case 'all':
+      default:
+        return true;
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.date) {
       newErrors.date = 'Data é obrigatória';
+    } else if (!isDateAllowed(formData.date)) {
+      const workingDaysText = userSettings?.workingDays === 'weekdays' 
+        ? 'dias de semana' 
+        : userSettings?.workingDays === 'weekends' 
+        ? 'finais de semana' 
+        : 'todos os dias';
+      newErrors.date = `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}`;
     }
 
     if (!formData.startTime) {
@@ -115,7 +172,18 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
-      <h2 className="text-2xl font-bold text-white mb-4">Registrar Horas</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-white">Registrar Horas</h2>
+        {userId && (
+          <button
+            onClick={() => setIsSettingsModalOpen(true)}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            title="Configurações"
+          >
+            ⚙️
+          </button>
+        )}
+      </div>
       
       {/* Indicador do usuário */}
       <div className="bg-blue-900/30 border border-blue-700 rounded-md p-3 mb-6">
@@ -213,6 +281,18 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           {isSubmitting ? 'Salvando...' : 'Registrar Horas'}
         </button>
       </form>
+
+      {/* Modal de Configurações */}
+      {userId && (
+        <UserSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          userId={userId}
+          onSettingsUpdated={() => {
+            loadUserSettings();
+          }}
+        />
+      )}
     </div>
   );
 }
