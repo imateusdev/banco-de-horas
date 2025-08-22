@@ -9,9 +9,11 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
+# Copy prisma schema (needed for postinstall)
+COPY prisma ./prisma
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (including devDependencies for build)
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -19,11 +21,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
-
-# Build Next.js application
+# Build Next.js application (prisma generate runs in postinstall)
 RUN npm run build
+
+# Install only production dependencies
+FROM base AS prod-deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+RUN npm ci --omit=dev
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -47,10 +54,9 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files and startup script
+# Copy production dependencies and Prisma files
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/start.sh ./start.sh
 
 # Make startup script executable
