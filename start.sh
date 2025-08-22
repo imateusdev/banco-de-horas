@@ -12,10 +12,6 @@ echo "⏳ Waiting for database connection..."
 echo "📊 Running database migrations..."
 npx prisma migrate deploy
 
-# Generate Prisma client (just in case)
-echo "🔧 Generating Prisma client..."
-npx prisma generate
-
 # Start the application
 echo "🌟 Starting Next.js application..."
 exec node server.js
