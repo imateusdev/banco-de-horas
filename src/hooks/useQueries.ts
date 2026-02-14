@@ -316,3 +316,28 @@ export function useApproveGoal() {
     },
   });
 }
+
+export function useAIReports(userId?: string) {
+  return useQuery({
+    queryKey: ['aiReports', userId],
+    queryFn: () =>
+      fetchWithAuth(`/api/admin/reports${userId ? `?userId=${userId}` : ''}`).then(
+        (data) => data.reports
+      ),
+    staleTime: ADMIN_STALE_TIME,
+    gcTime: GC_TIME,
+  });
+}
+
+export function useDeleteAIReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reportId: string) =>
+      fetchWithAuth(`/api/admin/reports?reportId=${reportId}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['aiReports'] });
+    },
+  });
+}

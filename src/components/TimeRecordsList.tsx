@@ -5,21 +5,78 @@ import { timeUtils } from '@/lib/calculations';
 import { TimeRecord } from '@/types';
 import { useTimeRecords, useUpdateTimeRecord, useDeleteTimeRecord } from '@/hooks/useQueries';
 import MarkdownRenderer from './MarkdownRenderer';
+import { auth } from '@/lib/firebase/config';
 
 interface TimeRecordsListProps {
   onRecordUpdated?: () => void;
   userId?: string;
+  showGenerateReportButton?: boolean;
+  onFilterMonthChange?: (month: string) => void;
 }
 
-export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecordsListProps) {
+export default function TimeRecordsList({
+  onRecordUpdated,
+  userId,
+  showGenerateReportButton = false,
+  onFilterMonthChange,
+}: TimeRecordsListProps) {
   const [filterMonth, setFilterMonth] = useState('');
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<TimeRecord>>({});
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const { data: records = [], isLoading } = useTimeRecords(userId || '');
   const updateRecord = useUpdateTimeRecord();
   const deleteRecord = useDeleteTimeRecord();
+
+  const handleGenerateReport = async () => {
+    if (!filterMonth || !userId) {
+      alert('Por favor, selecione um mês antes de gerar o relatório.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Deseja gerar um relatório com IA para o mês ${filterMonth}?\n\nIsso pode levar alguns segundos.`
+    );
+
+    if (!confirmed) return;
+
+    setGeneratingReport(true);
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
+      const token = await user.getIdToken();
+
+      const response = await fetch('/api/admin/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId, month: filterMonth }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao gerar relatório');
+      }
+
+      const data = await response.json();
+
+      if (data.isExisting) {
+        alert('✅ Relatório já existe! Você pode visualizá-lo na página de Relatórios da IA.');
+      } else {
+        alert(
+          '✅ Relatório gerado com sucesso! Você pode visualizá-lo na página de Relatórios da IA.'
+        );
+      }
+    } catch (error: any) {
+      alert(`❌ Erro ao gerar relatório: ${error.message}`);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const sortedRecords = useMemo(() => {
     return [...records].sort((a, b) => {
@@ -133,7 +190,10 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
           <label className="block text-sm font-medium text-neutral-300 mb-2">Filtrar por mês</label>
           <select
             value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
+            onChange={(e) => {
+              setFilterMonth(e.target.value);
+              onFilterMonthChange?.(e.target.value);
+            }}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
           >
             <option value="">Todos os meses</option>
@@ -163,15 +223,28 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
           </select>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end gap-3">
           <button
             onClick={() => {
               setFilterMonth('');
+              onFilterMonthChange?.('');
             }}
             className="px-4 py-2 bg-white/5 border border-white/10 rounded-md hover:bg-white/10 text-white transition-all"
           >
             Limpar Filtros
           </button>
+          {showGenerateReportButton && (
+            <button
+              onClick={handleGenerateReport}
+              disabled={!filterMonth || generatingReport}
+              className="px-4 py-2 bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              title={
+                !filterMonth ? 'Selecione um mês para gerar o relatório' : 'Gerar relatório com IA'
+              }
+            >
+              {generatingReport ? '⏳ Gerando...' : '🤖 Gerar Relatório com IA'}
+            </button>
+          )}
         </div>
       </div>
 

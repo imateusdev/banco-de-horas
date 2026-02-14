@@ -78,3 +78,23 @@ export interface UserSettings {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AIReport {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  month: string;
+  reportContent: string;
+  generatedBy: string;
+  generatedByName: string;
+  stats: {
+    totalWorkHours: number;
+    totalTimeOff: number;
+    netHours: number;
+    monthlyGoal: number;
+    goalDifference: number;
+    recordsCount: number;
+  };
+  createdAt: string;
+}

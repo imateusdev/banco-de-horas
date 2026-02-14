@@ -69,3 +69,33 @@ export function badRequest(message: string) {
 export function serverError(message: string) {
   return Response.json({ error: message }, { status: 500 });
 }
+
+export async function withAdminAccess(
+  request: NextRequest,
+  handler: (adminUserId: string) => Promise<Response>
+): Promise<Response> {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return unauthorized();
+  }
+
+  if (!isAdmin(user)) {
+    return Response.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+  }
+
+  return handler(user.uid);
+}
+
+export async function withUserAccess(
+  request: NextRequest,
+  handler: (userId: string) => Promise<Response>
+): Promise<Response> {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return unauthorized();
+  }
+
+  return handler(user.uid);
+}

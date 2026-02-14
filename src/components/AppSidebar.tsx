@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   CheckCircle,
   Trophy,
+  FileText,
 } from 'lucide-react';
 import { usePendingApprovals } from '@/hooks/useQueries';
 import { useRouter } from 'next/navigation';
@@ -183,6 +184,14 @@ export default function AppSidebar({
                   ),
                 }}
                 onClick={() => router.push('/admin/approvals')}
+              />
+              <SidebarLink
+                link={{
+                  label: 'Relatórios da IA',
+                  href: '#',
+                  icon: <FileText className="text-neutral-400 h-6 w-6 shrink-0" />,
+                }}
+                onClick={() => router.push('/admin/reports')}
               />
             </>
           )}

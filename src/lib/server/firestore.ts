@@ -1,5 +1,5 @@
 import { adminDb } from '@/lib/firebase/admin';
-import { TimeRecord, MonthlyGoal, User, HourConversion, UserSettings } from '@/types';
+import { TimeRecord, MonthlyGoal, User, HourConversion, UserSettings, AIReport } from '@/types';
 import { Timestamp } from 'firebase-admin/firestore';
 
 export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]> {
@@ -462,4 +462,128 @@ export async function deleteAllUserData(userId: string): Promise<void> {
   }
 
   console.log(`✅ Deleted ${deletedCount} documents for user ${userId}`);
+}
+
+export async function createAIReport(report: AIReport): Promise<void> {
+  await adminDb
+    .collection('aiReports')
+    .doc(report.id)
+    .set({
+      userId: report.userId,
+      userName: report.userName,
+      userEmail: report.userEmail,
+      month: report.month,
+      reportContent: report.reportContent,
+      generatedBy: report.generatedBy,
+      generatedByName: report.generatedByName,
+      stats: report.stats,
+      createdAt: Timestamp.fromDate(new Date(report.createdAt)),
+    });
+}
+
+export async function getAIReportsByUser(userId: string): Promise<AIReport[]> {
+  const snapshot = await adminDb
+    .collection('aiReports')
+    .where('userId', '==', userId)
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      userId: data.userId,
+      userName: data.userName,
+      userEmail: data.userEmail,
+      month: data.month,
+      reportContent: data.reportContent,
+      generatedBy: data.generatedBy,
+      generatedByName: data.generatedByName,
+      stats: data.stats,
+      createdAt: data.createdAt.toDate().toISOString(),
+    };
+  });
+}
+
+export async function getAIReport(reportId: string): Promise<AIReport | null> {
+  const doc = await adminDb.collection('aiReports').doc(reportId).get();
+
+  if (!doc.exists) {
+    return null;
+  }
+
+  const data = doc.data()!;
+  return {
+    id: doc.id,
+    userId: data.userId,
+    userName: data.userName,
+    userEmail: data.userEmail,
+    month: data.month,
+    reportContent: data.reportContent,
+    generatedBy: data.generatedBy,
+    generatedByName: data.generatedByName,
+    stats: data.stats,
+    createdAt: data.createdAt.toDate().toISOString(),
+  };
+}
+
+export async function getExistingAIReport(
+  userId: string,
+  month: string
+): Promise<AIReport | null> {
+  const snapshot = await adminDb
+    .collection('aiReports')
+    .where('userId', '==', userId)
+    .where('month', '==', month)
+    .orderBy('createdAt', 'desc')
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+  return {
+    id: doc.id,
+    userId: data.userId,
+    userName: data.userName,
+    userEmail: data.userEmail,
+    month: data.month,
+    reportContent: data.reportContent,
+    generatedBy: data.generatedBy,
+    generatedByName: data.generatedByName,
+    stats: data.stats,
+    createdAt: data.createdAt.toDate().toISOString(),
+  };
+}
+
+export async function getAllAIReports(): Promise<AIReport[]> {
+  const snapshot = await adminDb
+    .collection('aiReports')
+    .orderBy('createdAt', 'desc')
+    .limit(100)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      userId: data.userId,
+      userName: data.userName,
+      userEmail: data.userEmail,
+      month: data.month,
+      reportContent: data.reportContent,
+      generatedBy: data.generatedBy,
+      generatedByName: data.generatedByName,
+      stats: data.stats,
+      createdAt: data.createdAt.toDate().toISOString(),
+    };
+  });
+}
+
+export async function deleteAIReport(reportId: string): Promise<void> {
+  await adminDb.collection('aiReports').doc(reportId).delete();
 }
