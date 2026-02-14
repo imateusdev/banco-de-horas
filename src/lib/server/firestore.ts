@@ -175,6 +175,8 @@ export async function getUserSettings(userId: string): Promise<UserSettings | nu
     defaultStartTime: data.defaultStartTime,
     defaultEndTime: data.defaultEndTime,
     workingDays: data.workingDays,
+    githubUsername: data.githubUsername || null,
+    githubProjectId: data.githubProjectId || null,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
@@ -198,6 +200,8 @@ export async function createOrUpdateUserSettings(
       workingDays: settings.workingDays || 'weekdays',
       defaultStartTime: settings.defaultStartTime || null,
       defaultEndTime: settings.defaultEndTime || null,
+      githubUsername: settings.githubUsername || null,
+      githubProjectId: settings.githubProjectId || null,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });

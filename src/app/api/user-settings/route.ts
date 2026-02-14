@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
           defaultStartTime: null,
           defaultEndTime: null,
           workingDays: 'weekdays',
+          githubUsername: null,
+          githubProjectId: null,
         });
       }
 
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
       defaultStartTime?: string | null;
       defaultEndTime?: string | null;
       workingDays?: string;
+      githubUsername?: string | null;
+      githubProjectId?: string | null;
     }>(req);
 
     const { validateTime, validateWorkingDays } = await import('@/lib/server/validation');
@@ -52,6 +56,8 @@ export async function POST(request: NextRequest) {
       defaultStartTime: body.defaultStartTime,
       defaultEndTime: body.defaultEndTime,
       workingDays: body.workingDays as 'weekdays' | 'all' | undefined,
+      githubUsername: body.githubUsername,
+      githubProjectId: body.githubProjectId,
     });
 
     const settings = await getUserSettings(user.uid);

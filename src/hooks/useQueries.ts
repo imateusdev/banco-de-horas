@@ -195,15 +195,19 @@ export function useSaveUserSettings() {
       defaultStartTime,
       defaultEndTime,
       workingDays,
+      githubUsername,
+      githubProjectId,
     }: {
       userId: string;
       defaultStartTime: string | null;
       defaultEndTime: string | null;
       workingDays: string;
+      githubUsername?: string | null;
+      githubProjectId?: string | null;
     }) =>
       fetchWithAuth('/api/user-settings', {
         method: 'POST',
-        body: JSON.stringify({ userId, defaultStartTime, defaultEndTime, workingDays }),
+        body: JSON.stringify({ userId, defaultStartTime, defaultEndTime, workingDays, githubUsername, githubProjectId }),
       }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['userSettings', variables.userId] });

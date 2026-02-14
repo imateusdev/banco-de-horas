@@ -5,6 +5,7 @@ import { timeUtils } from '@/lib/calculations';
 import { useUserSettings, useCreateTimeRecord, useCreateHourConversion } from '@/hooks/useQueries';
 import { HourConversion } from '@/types';
 import UserSettingsModal from './UserSettingsModal';
+import { auth } from '@/lib/firebase/config';
 
 interface TimeRecordFormProps {
   onRecordAdded?: () => void;
@@ -35,6 +36,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   const createRecord = useCreateTimeRecord();
   const createConversion = useCreateHourConversion();
   const isSubmitting = createRecord.isPending || createConversion.isPending;
+  const [loadingCommits, setLoadingCommits] = useState(false);
 
   useEffect(() => {
     if (userSettings) {
@@ -68,6 +70,62 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       case 'all':
       default:
         return true;
+    }
+  };
+
+  const handleImportCommits = async () => {
+    if (!userSettings?.githubUsername) {
+      alert('⚠️ Configure seu username do GitHub nas configurações primeiro.');
+      setIsSettingsModalOpen(true);
+      return;
+    }
+
+    if (!formData.date) {
+      alert('⚠️ Selecione uma data primeiro.');
+      return;
+    }
+
+    setLoadingCommits(true);
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
+      const token = await user.getIdToken();
+
+      const response = await fetch(`/api/github/commits?date=${formData.date}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao buscar commits');
+      }
+
+      const data = await response.json();
+
+      if (data.count === 0) {
+        alert(`📭 Nenhum commit encontrado para a data ${formData.date}.`);
+        return;
+      }
+
+      // Adicionar os commits formatados no início ou final da descrição
+      const currentDescription = formData.description.trim();
+      const newDescription = currentDescription
+        ? `${data.markdown}\n${currentDescription}`
+        : data.markdown;
+
+      setFormData((prev) => ({
+        ...prev,
+        description: newDescription,
+      }));
+
+      alert(`✅ ${data.count} commit(s) importado(s) com sucesso!`);
+    } catch (error: any) {
+      console.error('Error importing commits:', error);
+      alert(`❌ Erro ao importar commits: ${error.message}`);
+    } finally {
+      setLoadingCommits(false);
     }
   };
 
@@ -466,12 +524,33 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             </div>
 
             <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Descrição do que foi feito <span className="text-red-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-neutral-300"
+                >
+                  Descrição do que foi feito <span className="text-red-400">*</span>
+                </label>
+                {userSettings?.githubUsername && (
+                  <button
+                    type="button"
+                    onClick={handleImportCommits}
+                    disabled={loadingCommits || !formData.date}
+                    className="px-3 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    title={!formData.date ? 'Selecione uma data primeiro' : 'Importar commits do GitHub'}
+                  >
+                    {loadingCommits ? (
+                      <>
+                        <span className="animate-spin">⏳</span> Importando...
+                      </>
+                    ) : (
+                      <>
+                        🐙 Importar Commits
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
               <textarea
                 id="description"
                 value={formData.description}

@@ -75,6 +75,8 @@ export interface UserSettings {
   defaultStartTime: string | null;
   defaultEndTime: string | null;
   workingDays: 'weekdays' | 'all' | 'weekends';
+  githubUsername: string | null;
+  githubProjectId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,4 +99,11 @@ export interface AIReport {
     recordsCount: number;
   };
   createdAt: string;
+}
+
+export interface GitHubProject {
+  id: string;
+  name: string;
+  repo: string;
+  token: string;
 }
