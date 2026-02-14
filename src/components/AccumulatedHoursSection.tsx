@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { clientTimeUtils } from '@/lib/client-calculations';
+import { apiClient } from '@/lib/api-client';
 import { timeUtils } from '@/lib/calculations';
 import { AccumulatedHours } from '@/types';
 
@@ -16,10 +16,31 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
 
   useEffect(() => {
     const loadAccumulatedHours = async () => {
+      if (!userId) return;
+
       setLoading(true);
       try {
-        const hours = await clientTimeUtils.getAccumulatedExtraHours(userId);
-        setAccumulatedHours(hours);
+        const [totalHours, conversions] = await Promise.all([
+          apiClient.getAccumulatedHours(userId),
+          apiClient.getHourConversions(userId),
+        ]);
+
+        const convertedToMoney = conversions
+          .filter(c => c.type === 'money')
+          .reduce((sum, c) => sum + c.hours, 0);
+
+        const usedForTimeOff = conversions
+          .filter(c => c.type === 'time_off')
+          .reduce((sum, c) => sum + c.hours, 0);
+
+        const totalExtraHours = totalHours + convertedToMoney + usedForTimeOff;
+
+        setAccumulatedHours({
+          totalExtraHours,
+          availableHours: totalHours,
+          convertedToMoney,
+          usedForTimeOff,
+        });
       } catch (error) {
         console.error('Error loading accumulated hours:', error);
       } finally {

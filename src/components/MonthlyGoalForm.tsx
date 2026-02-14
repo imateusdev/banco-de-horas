@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { clientStorageUtils } from '@/lib/client-storage';
+import { apiClient } from '@/lib/api-client';
 import { timeUtils } from '@/lib/calculations';
-import { generateUUID } from '@/lib/uuid';
 
 interface MonthlyGoalFormProps {
   onGoalUpdated?: () => void;
@@ -18,18 +17,18 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
 
   useEffect(() => {
     const loadExistingGoal = async () => {
+      if (!userId) return;
+
       try {
         // Carrega a meta existente para o mês selecionado
-        const existingGoal = userId 
-          ? await clientStorageUtils.getUserMonthlyGoal(userId, month) 
-          : await clientStorageUtils.getMonthlyGoal(month);
+        const existingGoal = await apiClient.getMonthlyGoal(userId, month);
         setHoursGoal(existingGoal > 0 ? existingGoal.toString() : '');
       } catch (error) {
         console.error('Error loading existing goal:', error);
         setHoursGoal('');
       }
     };
-    
+
     loadExistingGoal();
   }, [month, userId]);
 
@@ -52,24 +51,12 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
     setIsSubmitting(true);
 
     try {
-      if (userId) {
-        await clientStorageUtils.saveMonthlyGoal({
-          id: generateUUID(),
-          userId,
-          month,
-          hoursGoal: goalValue,
-          createdAt: new Date().toISOString(),
-        });
-      } else {
-        await clientStorageUtils.saveMonthlyGoal({
-          id: generateUUID(),
-          userId: 'default', // Para compatibilidade com o sistema antigo
-          month,
-          hoursGoal: goalValue,
-          createdAt: new Date().toISOString(),
-        });
+      if (!userId) {
+        setError('ID de usuário não encontrado');
+        return;
       }
 
+      await apiClient.saveMonthlyGoal(userId, month, goalValue);
       onGoalUpdated?.();
     } catch (error) {
       console.error('Error saving goal:', error);

@@ -1,30 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { storageUtils } from '@/lib/storage';
-import { HourConversion } from '@/types';
+import { NextRequest } from 'next/server';
+import { getUserFromRequest, canAccessUserData, unauthorized, badRequest, serverError } from '@/lib/server/auth';
+import { getUserHourConversions, createHourConversion } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorized();
 
-    const conversions = userId 
-      ? await storageUtils.getUserHourConversions(userId)
-      : await storageUtils.getHourConversions();
-      
-    return NextResponse.json(conversions);
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('userId') || user.uid;
+
+    // Check if user can access this data
+    if (!canAccessUserData(user, targetUserId)) {
+      return Response.json({ error: 'Forbidden - You can only access your own hour conversions' }, { status: 403 });
+    }
+
+    const conversions = await getUserHourConversions(targetUserId);
+    return Response.json(conversions);
   } catch (error) {
-    console.error('Error getting hour conversions:', error);
-    return NextResponse.json({ error: 'Failed to get hour conversions' }, { status: 500 });
+    console.error('Error fetching hour conversions:', error);
+    return serverError('Failed to fetch hour conversions');
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const conversion: HourConversion = await request.json();
-    await storageUtils.saveHourConversion(conversion);
-    return NextResponse.json({ success: true });
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorized();
+
+    const conversion = await request.json();
+
+    // Check if user can create this conversion
+    if (!canAccessUserData(user, conversion.userId)) {
+      return Response.json({ error: 'Forbidden - You can only create your own hour conversions' }, { status: 403 });
+    }
+
+    await createHourConversion(conversion);
+    return Response.json({ success: true }, { status: 201 });
   } catch (error) {
-    console.error('Error saving hour conversion:', error);
-    return NextResponse.json({ error: 'Failed to save hour conversion' }, { status: 500 });
+    console.error('Error creating hour conversion:', error);
+    return serverError('Failed to create hour conversion');
   }
 }

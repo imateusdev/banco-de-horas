@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { clientStorageUtils } from '@/lib/client-storage';
 import { timeUtils } from '@/lib/calculations';
+import { apiClient } from '@/lib/api-client';
 import UserSettingsModal from './UserSettingsModal';
 
 interface TimeRecordFormProps {
@@ -170,7 +170,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             day.type
           );
 
-          await clientStorageUtils.saveTimeRecord(record);
+          await apiClient.createTimeRecord(record);
 
           // Se for folga, criar conversão automática
           if (record.type === 'time_off') {
@@ -184,7 +184,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                 date: record.date,
                 createdAt: new Date().toISOString(),
               };
-              await clientStorageUtils.saveHourConversion(conversion);
+
+              await apiClient.createHourConversion(conversion);
             } catch (error) {
               console.error('Error saving hour conversion for time off:', error);
             }
@@ -204,7 +205,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           formData.type
         );
 
-        await clientStorageUtils.saveTimeRecord(record);
+        await apiClient.createTimeRecord(record);
 
         // Se for folga, criar uma conversão automática para deduzir do banco de horas
         if (record.type === 'time_off') {
@@ -218,7 +219,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               date: record.date,
               createdAt: new Date().toISOString(),
             };
-            await clientStorageUtils.saveHourConversion(conversion);
+
+            await apiClient.createHourConversion(conversion);
           } catch (error) {
             console.error('Error saving hour conversion for time off:', error);
             // Não interromper o fluxo se houver erro na conversão

@@ -1,10 +1,35 @@
-import { TimeRecord, MonthlyGoal, User } from '@/types';
+import { TimeRecord, MonthlyGoal, User, HourConversion } from '@/types';
+import { auth } from './firebase/config';
+
+// Helper para obter token de autenticação
+async function getAuthToken(): Promise<string | null> {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdToken();
+}
+
+// Helper para fazer requisições autenticadas
+async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = await getAuthToken();
+
+  if (!token) {
+    throw new Error('User not authenticated');
+  }
+
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+}
 
 export const clientStorageUtils = {
   // Time Records
   async getTimeRecords(userId?: string): Promise<TimeRecord[]> {
-    const url = userId ? `/api/time-records?userId=${userId}` : '/api/time-records';
-    const response = await fetch(url);
+    const response = await authenticatedFetch('/api/time-records');
     if (!response.ok) {
       throw new Error('Failed to fetch time records');
     }
@@ -12,9 +37,8 @@ export const clientStorageUtils = {
   },
 
   async saveTimeRecord(record: TimeRecord): Promise<void> {
-    const response = await fetch('/api/time-records', {
+    const response = await authenticatedFetch('/api/time-records', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(record),
     });
     if (!response.ok) {
@@ -23,10 +47,9 @@ export const clientStorageUtils = {
   },
 
   async updateTimeRecord(id: string, updatedRecord: Partial<TimeRecord>): Promise<void> {
-    const response = await fetch(`/api/time-records/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedRecord),
+    const response = await authenticatedFetch('/api/time-records', {
+      method: 'PATCH',
+      body: JSON.stringify({ id, ...updatedRecord }),
     });
     if (!response.ok) {
       throw new Error('Failed to update time record');
@@ -34,7 +57,7 @@ export const clientStorageUtils = {
   },
 
   async deleteTimeRecord(id: string): Promise<void> {
-    const response = await fetch(`/api/time-records/${id}`, {
+    const response = await authenticatedFetch(`/api/time-records?id=${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) {
@@ -42,10 +65,13 @@ export const clientStorageUtils = {
     }
   },
 
+  async getUserTimeRecords(userId: string): Promise<TimeRecord[]> {
+    return this.getTimeRecords(userId);
+  },
+
   // Monthly Goals
   async getMonthlyGoals(userId?: string): Promise<MonthlyGoal[]> {
-    const url = userId ? `/api/monthly-goals?userId=${userId}` : '/api/monthly-goals';
-    const response = await fetch(url);
+    const response = await authenticatedFetch('/api/monthly-goals');
     if (!response.ok) {
       throw new Error('Failed to fetch monthly goals');
     }
@@ -53,21 +79,17 @@ export const clientStorageUtils = {
   },
 
   async getMonthlyGoal(month: string, userId?: string): Promise<number> {
-    const url = userId 
-      ? `/api/monthly-goals?userId=${userId}&month=${month}` 
-      : `/api/monthly-goals?month=${month}`;
-    const response = await fetch(url);
+    const response = await authenticatedFetch(`/api/monthly-goals?month=${month}`);
     if (!response.ok) {
       throw new Error('Failed to fetch monthly goal');
     }
     const data = await response.json();
-    return data.goal;
+    return data.goal || 0;
   },
 
   async saveMonthlyGoal(goal: MonthlyGoal): Promise<void> {
-    const response = await fetch('/api/monthly-goals', {
+    const response = await authenticatedFetch('/api/monthly-goals', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(goal),
     });
     if (!response.ok) {
@@ -75,9 +97,17 @@ export const clientStorageUtils = {
     }
   },
 
+  async getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]> {
+    return this.getMonthlyGoals(userId);
+  },
+
+  async getUserMonthlyGoal(userId: string, month: string): Promise<number> {
+    return this.getMonthlyGoal(month, userId);
+  },
+
   // Users
   async getUsers(): Promise<User[]> {
-    const response = await fetch('/api/users');
+    const response = await authenticatedFetch('/api/users');
     if (!response.ok) {
       throw new Error('Failed to fetch users');
     }
@@ -85,9 +115,8 @@ export const clientStorageUtils = {
   },
 
   async saveUser(user: User): Promise<void> {
-    const response = await fetch('/api/users', {
+    const response = await authenticatedFetch('/api/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user),
     });
     if (!response.ok) {
@@ -96,7 +125,7 @@ export const clientStorageUtils = {
   },
 
   async getUserBySlug(slug: string): Promise<User | null> {
-    const response = await fetch(`/api/users/${slug}`);
+    const response = await authenticatedFetch(`/api/users/${slug}`);
     if (response.status === 404) {
       return null;
     }
@@ -108,31 +137,18 @@ export const clientStorageUtils = {
 
   // Utility functions (remain client-side)
   generateUserSlug(name: string): string {
-    return name.toLowerCase()
+    return name
+      .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-      .replace(/[^a-z0-9]/g, '') // Remove caracteres especiais
-      .slice(0, 20); // Limita tamanho
-  },
-
-  // Filtered methods by userId
-  async getUserTimeRecords(userId: string): Promise<TimeRecord[]> {
-    return this.getTimeRecords(userId);
-  },
-
-  async getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]> {
-    return this.getMonthlyGoals(userId);
-  },
-
-  async getUserMonthlyGoal(userId: string, month: string): Promise<number> {
-    return this.getMonthlyGoal(month, userId);
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 20);
   },
 
   // Hour Conversions
-  async getHourConversions(userId?: string): Promise<import('@/types').HourConversion[]> {
+  async getHourConversions(userId?: string): Promise<HourConversion[]> {
     try {
-      const url = userId ? `/api/hour-conversions?userId=${userId}` : '/api/hour-conversions';
-      const response = await fetch(url);
+      const response = await authenticatedFetch('/api/hour-conversions');
       if (!response.ok) {
         throw new Error('Failed to fetch hour conversions');
       }
@@ -143,20 +159,17 @@ export const clientStorageUtils = {
     }
   },
 
-  async getUserHourConversions(userId: string): Promise<import('@/types').HourConversion[]> {
+  async getUserHourConversions(userId: string): Promise<HourConversion[]> {
     return this.getHourConversions(userId);
   },
 
-  async saveHourConversion(conversion: import('@/types').HourConversion): Promise<void> {
+  async saveHourConversion(conversion: HourConversion): Promise<void> {
     try {
-      const response = await fetch('/api/hour-conversions', {
+      const response = await authenticatedFetch('/api/hour-conversions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(conversion),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to save hour conversion');
       }

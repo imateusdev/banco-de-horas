@@ -1,39 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { storageUtils } from '@/lib/storage';
-import { MonthlyGoal } from '@/types';
+import { NextRequest } from 'next/server';
+import { getUserFromRequest, canAccessUserData, unauthorized, badRequest, serverError } from '@/lib/server/auth';
+import { getUserMonthlyGoals, getUserMonthlyGoal, saveMonthlyGoal } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorized();
+
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
     const month = searchParams.get('month');
+    const targetUserId = searchParams.get('userId') || user.uid;
+
+    // Check if user can access this data
+    if (!canAccessUserData(user, targetUserId)) {
+      return Response.json({ error: 'Forbidden - You can only access your own monthly goals' }, { status: 403 });
+    }
 
     if (month) {
-      // Get specific monthly goal
-      const goal = userId 
-        ? await storageUtils.getUserMonthlyGoal(userId, month)
-        : await storageUtils.getMonthlyGoal(month);
-      return NextResponse.json({ goal });
+      const goal = await getUserMonthlyGoal(targetUserId, month);
+      return Response.json({ goal });
     } else {
-      // Get all monthly goals
-      const goals = userId
-        ? await storageUtils.getUserMonthlyGoals(userId)
-        : await storageUtils.getMonthlyGoals();
-      return NextResponse.json(goals);
+      const goals = await getUserMonthlyGoals(targetUserId);
+      return Response.json(goals);
     }
   } catch (error) {
-    console.error('Error getting monthly goals:', error);
-    return NextResponse.json({ error: 'Failed to get monthly goals' }, { status: 500 });
+    console.error('Error fetching monthly goals:', error);
+    return serverError('Failed to fetch monthly goals');
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const goal: MonthlyGoal = await request.json();
-    await storageUtils.saveMonthlyGoal(goal);
-    return NextResponse.json({ success: true });
+    const user = await getUserFromRequest(request);
+    if (!user) return unauthorized();
+
+    const goal = await request.json();
+
+    // Check if user can create this goal
+    if (!canAccessUserData(user, goal.userId)) {
+      return Response.json({ error: 'Forbidden - You can only create your own monthly goals' }, { status: 403 });
+    }
+
+    await saveMonthlyGoal(goal);
+    return Response.json({ success: true }, { status: 201 });
   } catch (error) {
     console.error('Error saving monthly goal:', error);
-    return NextResponse.json({ error: 'Failed to save monthly goal' }, { status: 500 });
+    return serverError('Failed to save monthly goal');
   }
 }

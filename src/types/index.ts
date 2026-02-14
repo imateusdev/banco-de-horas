@@ -59,3 +59,13 @@ export interface UserSession {
   currentUserId: string | null;
   currentUserName: string | null;
 }
+
+export interface UserSettings {
+  id: string;
+  userId: string;
+  defaultStartTime: string | null;
+  defaultEndTime: string | null;
+  workingDays: 'weekdays' | 'all' | 'weekends';
+  createdAt: string;
+  updatedAt: string;
+}

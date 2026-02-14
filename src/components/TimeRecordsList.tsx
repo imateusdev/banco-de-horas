@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { clientStorageUtils } from '@/lib/client-storage';
+import { apiClient } from '@/lib/api-client';
 import { timeUtils } from '@/lib/calculations';
 import { TimeRecord } from '@/types';
 
@@ -19,15 +19,17 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
   const [editForm, setEditForm] = useState<Partial<TimeRecord>>({});
 
   const loadRecords = useCallback(async () => {
+    if (!userId) return;
+
     try {
-      const allRecords = userId ? await clientStorageUtils.getUserTimeRecords(userId) : await clientStorageUtils.getTimeRecords();
+      const allRecords = await apiClient.getTimeRecords(userId);
       // Ordenar por data mais recente primeiro
       allRecords.sort((a, b) => {
         const dateCompare = b.date.localeCompare(a.date);
         if (dateCompare !== 0) return dateCompare;
         return b.createdAt.localeCompare(a.createdAt);
       });
-      
+
       setRecords(allRecords);
       setFilteredRecords(allRecords);
     } catch (error) {
@@ -54,9 +56,11 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
   }, [records, filterMonth]);
 
   const handleDelete = async (id: string) => {
+    if (!userId) return;
+
     if (window.confirm('Tem certeza que deseja excluir este registro?')) {
       try {
-        await clientStorageUtils.deleteTimeRecord(id);
+        await apiClient.deleteTimeRecord(id, userId);
         await loadRecords();
         onRecordUpdated?.();
       } catch (error) {
@@ -86,7 +90,7 @@ export default function TimeRecordsList({ refreshTrigger, onRecordUpdated, userI
         totalHours: timeUtils.calculateHoursDifference(editForm.startTime!, editForm.endTime!),
       } as Partial<TimeRecord>;
 
-      await clientStorageUtils.updateTimeRecord(editingRecord, updatedRecord);
+      await apiClient.updateTimeRecord(editingRecord, updatedRecord);
       await loadRecords();
       onRecordUpdated?.();
       cancelEditing();

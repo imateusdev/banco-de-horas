@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { clientStorageUtils } from '@/lib/client-storage';
-import { clientTimeUtils } from '@/lib/client-calculations';
+import { apiClient } from '@/lib/api-client';
 import { timeUtils } from '@/lib/calculations';
 import { AccumulatedHours, HourConversion } from '@/types';
 
@@ -26,8 +25,25 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
   useEffect(() => {
     const loadAccumulatedHours = async () => {
       try {
-        const hours = await clientTimeUtils.getAccumulatedExtraHours(userId);
-        setAccumulatedHours(hours);
+        const [totalHours, conversions] = await Promise.all([
+          apiClient.getAccumulatedHours(userId),
+          apiClient.getHourConversions(userId),
+        ]);
+
+        const convertedToMoney = conversions
+          .filter(c => c.type === 'money')
+          .reduce((sum, c) => sum + c.hours, 0);
+
+        const usedForTimeOff = conversions
+          .filter(c => c.type === 'time_off')
+          .reduce((sum, c) => sum + c.hours, 0);
+
+        setAccumulatedHours({
+          totalExtraHours: totalHours,
+          availableHours: totalHours,
+          convertedToMoney,
+          usedForTimeOff,
+        });
       } catch (error) {
         console.error('Error loading accumulated hours:', error);
       } finally {
@@ -75,7 +91,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         createdAt: new Date().toISOString(),
       };
 
-      await clientStorageUtils.saveHourConversion(conversion);
+      await apiClient.createHourConversion(conversion);
 
       // Reset form
       setFormData({
@@ -85,8 +101,25 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
       });
 
       // Reload accumulated hours
-      const updatedHours = await clientTimeUtils.getAccumulatedExtraHours(userId);
-      setAccumulatedHours(updatedHours);
+      const [totalHours, conversions] = await Promise.all([
+        apiClient.getAccumulatedHours(userId),
+        apiClient.getHourConversions(userId),
+      ]);
+
+      const convertedToMoney = conversions
+        .filter(c => c.type === 'money')
+        .reduce((sum, c) => sum + c.hours, 0);
+
+      const usedForTimeOff = conversions
+        .filter(c => c.type === 'time_off')
+        .reduce((sum, c) => sum + c.hours, 0);
+
+      setAccumulatedHours({
+        totalExtraHours: totalHours,
+        availableHours: totalHours,
+        convertedToMoney,
+        usedForTimeOff,
+      });
 
       onConversionAdded?.();
     } catch (error) {
