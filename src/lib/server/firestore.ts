@@ -356,3 +356,58 @@ export async function addPreAuthorizedEmail(
 export async function removePreAuthorizedEmail(email: string): Promise<void> {
   await adminDb.collection('preAuthorizedEmails').doc(email.toLowerCase()).delete();
 }
+
+export async function deleteAllUserData(userId: string): Promise<void> {
+  const batch = adminDb.batch();
+  let deletedCount = 0;
+
+  const timeRecordsSnapshot = await adminDb
+    .collection('timeRecords')
+    .where('userId', '==', userId)
+    .get();
+
+  timeRecordsSnapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+    deletedCount++;
+  });
+
+  const monthlyGoalsSnapshot = await adminDb
+    .collection('monthlyGoals')
+    .where('userId', '==', userId)
+    .get();
+
+  monthlyGoalsSnapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+    deletedCount++;
+  });
+
+  const hourConversionsSnapshot = await adminDb
+    .collection('hourConversions')
+    .where('userId', '==', userId)
+    .get();
+
+  hourConversionsSnapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+    deletedCount++;
+  });
+
+  const userSettingsRef = adminDb.collection('userSettings').doc(userId);
+  const userSettingsDoc = await userSettingsRef.get();
+  if (userSettingsDoc.exists) {
+    batch.delete(userSettingsRef);
+    deletedCount++;
+  }
+
+  const userRef = adminDb.collection('users').doc(userId);
+  const userDoc = await userRef.get();
+  if (userDoc.exists) {
+    batch.delete(userRef);
+    deletedCount++;
+  }
+
+  if (deletedCount > 0) {
+    await batch.commit();
+  }
+
+  console.log(`✅ Deleted ${deletedCount} documents for user ${userId}`);
+}

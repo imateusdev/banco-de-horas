@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token, true);
 
     if (decodedToken.authorized && decodedToken.role) {
       return Response.json({
@@ -62,6 +62,9 @@ export async function GET(request: NextRequest) {
         authorized: true,
         role: preAuthorized.role,
       });
+
+      const { removePreAuthorizedEmail } = await import('@/lib/server/firestore');
+      await removePreAuthorizedEmail(userEmail);
 
       return Response.json({
         authorized: true,

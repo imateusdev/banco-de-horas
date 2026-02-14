@@ -18,7 +18,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<Authenti
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token, true);
 
     if (!decodedToken.authorized) {
       console.warn(`Unauthorized access attempt by user: ${decodedToken.email}`);

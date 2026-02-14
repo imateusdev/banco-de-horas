@@ -138,8 +138,12 @@ export async function DELETE(request: NextRequest) {
       role: null,
     });
 
-    const { getPreAuthorizedEmail, removePreAuthorizedEmail } =
+    await adminAuth.revokeRefreshTokens(targetUser.uid);
+
+    const { deleteAllUserData, getPreAuthorizedEmail, removePreAuthorizedEmail } =
       await import('@/lib/server/firestore');
+    await deleteAllUserData(targetUser.uid);
+
     const preAuth = await getPreAuthorizedEmail(email);
     if (preAuth) {
       await removePreAuthorizedEmail(email);
@@ -147,7 +151,7 @@ export async function DELETE(request: NextRequest) {
 
     return Response.json({
       success: true,
-      message: `Autorização de ${email} removida`,
+      message: `Usuário ${email} removido completamente. Todos os dados foram apagados e a sessão foi invalidada.`,
     });
   });
 }
