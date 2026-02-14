@@ -8,19 +8,21 @@ import TimeRecordsList from '@/components/TimeRecordsList';
 import AdminLayout from '@/components/AdminLayout';
 import AdminGoalModal from '@/components/AdminGoalModal';
 import AdminConversionModal from '@/components/AdminConversionModal';
+import UserConversionsHistory from '@/components/UserConversionsHistory';
 
 export default function UserDashboardPage() {
   const params = useParams();
   const userId = params.userId as string;
 
   const { data: userData, isLoading } = useUserData(userId);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'history'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'conversions'>('dashboard');
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showConversionModal, setShowConversionModal] = useState(false);
 
   const tabs = [
     { id: 'dashboard' as const, label: 'Dashboard', emoji: '📊' },
-    { id: 'history' as const, label: 'Histórico', emoji: '📋' },
+    { id: 'history' as const, label: 'Registro de Horas', emoji: '📋' },
+    { id: 'conversions' as const, label: 'Conversões', emoji: '💰' },
   ];
 
   return (
@@ -91,6 +93,8 @@ export default function UserDashboardPage() {
         {activeTab === 'dashboard' && <StatsDashboard userId={userId} />}
 
         {activeTab === 'history' && <TimeRecordsList userId={userId} onRecordUpdated={() => {}} />}
+
+        {activeTab === 'conversions' && <UserConversionsHistory userId={userId} />}
       </div>
     </AdminLayout>
   );

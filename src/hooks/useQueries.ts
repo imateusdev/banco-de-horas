@@ -223,6 +223,19 @@ export function useAdminUsers() {
   });
 }
 
+export function useUsersRanking(month: string) {
+  return useQuery({
+    queryKey: ['usersRanking', month],
+    queryFn: async () => {
+      const data = await fetchWithAuth(`/api/admin/users-ranking?month=${month}`);
+      return data.rankings || [];
+    },
+    enabled: !!month,
+    staleTime: ADMIN_STALE_TIME,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
 function createAdminMutation(
   url: string,
   method: 'POST' | 'DELETE' = 'POST',

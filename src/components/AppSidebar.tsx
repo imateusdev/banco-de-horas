@@ -13,6 +13,7 @@ import {
   Users,
   ArrowLeft,
   CheckCircle,
+  Trophy,
 } from 'lucide-react';
 import { usePendingApprovals } from '@/hooks/useQueries';
 import { useRouter } from 'next/navigation';
@@ -157,6 +158,14 @@ export default function AppSidebar({
                   icon: <Users className="text-neutral-400 h-6 w-6 shrink-0" />,
                 }}
                 onClick={onAdminClick}
+              />
+              <SidebarLink
+                link={{
+                  label: 'Ranking',
+                  href: '#',
+                  icon: <Trophy className="text-neutral-400 h-6 w-6 shrink-0" />,
+                }}
+                onClick={() => router.push('/admin/ranking')}
               />
               <SidebarLink
                 link={{
