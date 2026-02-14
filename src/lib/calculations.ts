@@ -122,7 +122,8 @@ export const timeUtils = {
     date: string,
     startTime: string,
     endTime: string,
-    type: 'work' | 'time_off' = 'work'
+    type: 'work' | 'time_off' = 'work',
+    description?: string
   ): TimeRecord => {
     const totalHours = timeUtils.calculateHoursDifference(startTime, endTime);
 
@@ -135,6 +136,7 @@ export const timeUtils = {
       startTime,
       endTime,
       totalHours,
+      description,
       createdAt: new Date().toISOString(),
     };
   },

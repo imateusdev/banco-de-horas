@@ -7,6 +7,7 @@ export interface TimeRecord {
   startTime: string;
   endTime: string;
   totalHours: number;
+  description?: string;
   createdAt: string;
 }
 

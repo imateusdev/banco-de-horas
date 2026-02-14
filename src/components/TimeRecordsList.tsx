@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { timeUtils } from '@/lib/calculations';
 import { TimeRecord } from '@/types';
 import { useTimeRecords, useUpdateTimeRecord, useDeleteTimeRecord } from '@/hooks/useQueries';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface TimeRecordsListProps {
   onRecordUpdated?: () => void;
@@ -14,6 +15,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
   const [filterMonth, setFilterMonth] = useState('');
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<TimeRecord>>({});
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   const { data: records = [], isLoading } = useTimeRecords(userId || '');
   const updateRecord = useUpdateTimeRecord();
@@ -102,6 +104,18 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
 
   const getTotalHours = (): number => {
     return filteredRecords.reduce((sum, record) => sum + record.totalHours, 0);
+  };
+
+  const toggleDescription = (recordId: string) => {
+    setExpandedDescriptions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -272,6 +286,21 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                         </div>
                       </div>
 
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1">
+                          Descrição (suporta Markdown)
+                        </label>
+                        <textarea
+                          value={editForm.description || ''}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                          }
+                          rows={12}
+                          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 resize-y font-mono text-sm"
+                          placeholder="Descrição das atividades realizadas..."
+                        />
+                      </div>
+
                       {editForm.startTime && editForm.endTime && (
                         <div className="bg-blue-900/30 border border-blue-700 rounded-md p-2">
                           <p className="text-blue-300 text-sm">
@@ -333,6 +362,41 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                           </p>
                         </div>
                       </div>
+
+                      {record.description && (
+                        <div className="mt-3 p-4 bg-white/5 border border-white/10 rounded-md">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs text-white/50 font-semibold">📝 Descrição:</p>
+                            <button
+                              onClick={() => toggleDescription(record.id)}
+                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                            >
+                              {expandedDescriptions.has(record.id) ? (
+                                <>
+                                  <span>Recolher</span>
+                                  <span>▲</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>Expandir</span>
+                                  <span>▼</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div
+                            className={`text-sm overflow-hidden transition-all duration-300 ${
+                              expandedDescriptions.has(record.id) ? 'max-h-none' : 'max-h-20'
+                            }`}
+                          >
+                            <MarkdownRenderer content={record.description} />
+                          </div>
+                          {!expandedDescriptions.has(record.id) &&
+                            record.description.length > 100 && (
+                              <div className="absolute bottom-0 left-0 right-0 h-8 bg-linear-to-t from-white/5 to-transparent pointer-events-none" />
+                            )}
+                        </div>
+                      )}
 
                       <div className="flex justify-between items-center mt-4">
                         <p className="text-xs text-neutral-500">

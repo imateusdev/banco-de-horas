@@ -11,7 +11,7 @@ export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]
       .limit(500)
       .get();
 
-    return snapshot.docs.map((doc) => {
+    const records = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -22,9 +22,11 @@ export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]
         startTime: data.startTime,
         endTime: data.endTime,
         totalHours: data.totalHours,
+        description: data.description || undefined,
         createdAt: data.createdAt.toDate().toISOString(),
       };
     });
+    return records;
   } catch (error: any) {
     if (error?.code === 5 || error?.message?.includes('does not exist')) {
       console.warn('⚠️ Firestore collection not found, returning empty array');
@@ -53,25 +55,25 @@ export async function getAllTimeRecords(): Promise<TimeRecord[]> {
       startTime: data.startTime,
       endTime: data.endTime,
       totalHours: data.totalHours,
+      description: data.description || undefined,
       createdAt: data.createdAt.toDate().toISOString(),
     };
   });
 }
 
 export async function createTimeRecord(record: TimeRecord): Promise<void> {
-  await adminDb
-    .collection('timeRecords')
-    .doc(record.id)
-    .set({
-      userId: record.userId,
-      name: record.name,
-      date: Timestamp.fromDate(new Date(record.date)),
-      type: record.type,
-      startTime: record.startTime,
-      endTime: record.endTime,
-      totalHours: record.totalHours,
-      createdAt: Timestamp.fromDate(new Date(record.createdAt)),
-    });
+  const dataToSave = {
+    userId: record.userId,
+    name: record.name,
+    date: Timestamp.fromDate(new Date(record.date)),
+    type: record.type,
+    startTime: record.startTime,
+    endTime: record.endTime,
+    totalHours: record.totalHours,
+    description: record.description || null,
+    createdAt: Timestamp.fromDate(new Date(record.createdAt)),
+  };
+  await adminDb.collection('timeRecords').doc(record.id).set(dataToSave);
 }
 
 export async function updateTimeRecord(
@@ -93,6 +95,7 @@ export async function updateTimeRecord(
   if (updates.startTime !== undefined) updateData.startTime = updates.startTime;
   if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
   if (updates.totalHours !== undefined) updateData.totalHours = updates.totalHours;
+  if (updates.description !== undefined) updateData.description = updates.description || null;
 
   await recordRef.update(updateData);
 }

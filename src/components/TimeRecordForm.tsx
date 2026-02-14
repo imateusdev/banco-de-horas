@@ -18,6 +18,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     startTime: '',
     endTime: '',
     type: 'work' as 'work' | 'time_off',
+    description: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -130,6 +131,12 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       ) {
         newErrors.endTime = 'Horário de término deve ser diferente do início';
       }
+
+      if (!formData.description || formData.description.trim().length === 0) {
+        newErrors.description = 'Descrição é obrigatória';
+      } else if (formData.description.trim().length < 10) {
+        newErrors.description = 'Descrição deve ter pelo menos 10 caracteres';
+      }
     }
 
     setErrors(newErrors);
@@ -189,7 +196,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           formData.date,
           formData.startTime,
           formData.endTime,
-          formData.type
+          formData.type,
+          formData.description
         );
 
         await createRecord.mutateAsync(record);
@@ -213,6 +221,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           startTime: '',
           endTime: '',
           type: 'work' as 'work' | 'time_off',
+          description: '',
         });
       }
 
@@ -454,6 +463,31 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                 />
                 {errors.endTime && <p className="text-red-400 text-sm mt-1">{errors.endTime}</p>}
               </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-neutral-300 mb-2"
+              >
+                Descrição do que foi feito <span className="text-red-400">*</span>
+              </label>
+              <textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Descreva as atividades realizadas durante este período...&#10;&#10;Você pode usar Markdown:&#10;- **negrito**&#10;- *itálico*&#10;- `código`&#10;- [link](url)&#10;- # Título"
+                rows={15}
+                className={`w-full px-3 py-2 bg-white/5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white resize-y font-mono text-sm ${
+                  errors.description ? 'border-red-500' : 'border-white/10'
+                }`}
+              />
+              {errors.description && (
+                <p className="text-red-400 text-sm mt-1">{errors.description}</p>
+              )}
+              <p className="text-white/50 text-xs mt-1">
+                💡 Mínimo de 10 caracteres ({formData.description.length}/10) • Suporta Markdown
+              </p>
             </div>
 
             {formData.startTime &&

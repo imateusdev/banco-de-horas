@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       startTime: body.startTime,
       endTime: body.endTime,
       totalHours: validateNumber(body.totalHours, 0, 24),
+      description: body.description ? sanitizeString(body.description, 10000) : undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -145,6 +146,12 @@ export async function PATCH(request: NextRequest) {
 
     if (updates.totalHours !== undefined) {
       sanitizedUpdates.totalHours = validateNumber(updates.totalHours, 0, 24);
+    }
+
+    if (updates.description !== undefined) {
+      sanitizedUpdates.description = updates.description
+        ? sanitizeString(updates.description, 10000)
+        : undefined;
     }
 
     await updateTimeRecord(id, userId, sanitizedUpdates);
