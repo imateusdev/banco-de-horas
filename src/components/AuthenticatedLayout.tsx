@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import ModernBackground from '@/components/ModernBackground';
 import { cn } from '@/lib/utils';

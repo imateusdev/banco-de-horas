@@ -1,17 +1,12 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
 import StatsDashboard from '@/components/StatsDashboard';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
 export default function Dashboard() {
-  const { user } = useAuth();
-
-  if (!user) return null;
-
   return (
     <AuthenticatedLayout activeTab="dashboard">
-      <StatsDashboard userId={user.uid} />
+      {(user) => <StatsDashboard userId={user.uid} />}
     </AuthenticatedLayout>
   );
 }

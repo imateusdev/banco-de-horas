@@ -4,6 +4,7 @@ import { auth } from '@/lib/firebase/config';
 import { TimeRecord, HourConversion } from '@/types';
 
 const STALE_TIME = 1000 * 60 * 10;
+const GC_TIME = 1000 * 60 * 30;
 const ADMIN_STALE_TIME = 1000 * 60 * 5;
 
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -37,6 +38,9 @@ export function useDashboardData(userId: string, date: string, month: string) {
     queryFn: () => apiClient.getDashboardData(date, month),
     enabled: !!userId,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -47,6 +51,9 @@ export function useTimeRecords(userId: string) {
     queryFn: () => apiClient.getTimeRecords(userId),
     enabled: !!userId,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -62,14 +69,8 @@ export function useCreateTimeRecord() {
 export function useUpdateTimeRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      updates,
-    }: {
-      id: string;
-      updates: Partial<TimeRecord>;
-      userId: string;
-    }) => apiClient.updateTimeRecord(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<TimeRecord>; userId: string }) =>
+      apiClient.updateTimeRecord(id, updates),
     onSuccess: (_, variables) => invalidateUserQueries(queryClient, variables.userId),
   });
 }
@@ -89,6 +90,9 @@ export function useHourConversions(userId: string) {
     queryFn: () => apiClient.getHourConversions(userId),
     enabled: !!userId,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -110,6 +114,9 @@ export function useMonthlyGoal(userId: string, month: string) {
     queryFn: () => apiClient.getMonthlyGoal(userId, month),
     enabled: !!userId && !!month,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -134,6 +141,9 @@ export function useUserData(userId: string) {
     queryFn: () => fetchWithAuth(`/api/users/${userId}`),
     enabled: !!userId,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -144,6 +154,9 @@ export function useUserSettings(userId: string) {
     queryFn: () => fetchWithAuth(`/api/user-settings?userId=${userId}`),
     enabled: !!userId,
     staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   });
 }
