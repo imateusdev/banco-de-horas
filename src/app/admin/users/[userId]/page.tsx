@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserData } from '@/hooks/useQueries';
 import StatsDashboard from '@/components/StatsDashboard';
 import TimeRecordsList from '@/components/TimeRecordsList';
 
@@ -12,27 +13,8 @@ export default function UserDashboardPage() {
   const params = useParams();
   const userId = params.userId as string;
 
-  const [userData, setUserData] = useState<{ email: string; displayName: string } | null>(null);
+  const { data: userData } = useUserData(userId);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history'>('dashboard');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`/api/users/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
 
   if (authLoading) {
     return (
@@ -102,14 +84,13 @@ export default function UserDashboardPage() {
       {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard refreshTrigger={refreshTrigger} userId={userId} />
+          <StatsDashboard userId={userId} />
         )}
 
         {activeTab === 'history' && (
           <TimeRecordsList
             userId={userId}
-            refreshTrigger={refreshTrigger}
-            onRecordUpdated={() => setRefreshTrigger((prev) => prev + 1)}
+            onRecordUpdated={() => {}}
           />
         )}
       </main>

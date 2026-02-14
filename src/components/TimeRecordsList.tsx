@@ -1,69 +1,43 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { useState, useMemo } from 'react';
 import { timeUtils } from '@/lib/calculations';
 import { TimeRecord } from '@/types';
+import { useTimeRecords, useUpdateTimeRecord, useDeleteTimeRecord } from '@/hooks/useQueries';
 
 interface TimeRecordsListProps {
-  refreshTrigger?: number;
   onRecordUpdated?: () => void;
   userId?: string;
 }
 
-export default function TimeRecordsList({
-  refreshTrigger,
-  onRecordUpdated,
-  userId,
-}: TimeRecordsListProps) {
-  const [records, setRecords] = useState<TimeRecord[]>([]);
-  const [filteredRecords, setFilteredRecords] = useState<TimeRecord[]>([]);
+export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecordsListProps) {
   const [filterMonth, setFilterMonth] = useState('');
   const [editingRecord, setEditingRecord] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<TimeRecord>>({});
 
-  const loadRecords = useCallback(async () => {
-    if (!userId) return;
+  const { data: records = [], isLoading } = useTimeRecords(userId || '');
+  const updateRecord = useUpdateTimeRecord();
+  const deleteRecord = useDeleteTimeRecord();
 
-    try {
-      const allRecords = await apiClient.getTimeRecords(userId);
+  const sortedRecords = useMemo(() => {
+    return [...records].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+  }, [records]);
 
-      allRecords.sort((a, b) => {
-        const dateCompare = b.date.localeCompare(a.date);
-        if (dateCompare !== 0) return dateCompare;
-        return b.createdAt.localeCompare(a.createdAt);
-      });
-
-      setRecords(allRecords);
-      setFilteredRecords(allRecords);
-    } catch (error) {
-      console.error('Error loading records:', error);
-      setRecords([]);
-      setFilteredRecords([]);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    loadRecords();
-  }, [refreshTrigger, loadRecords]);
-
-  useEffect(() => {
-    let filtered = records;
-
-    if (filterMonth) {
-      filtered = filtered.filter((record) => record.date.startsWith(filterMonth));
-    }
-
-    setFilteredRecords(filtered);
-  }, [records, filterMonth]);
+  const filteredRecords = useMemo(() => {
+    if (!filterMonth) return sortedRecords;
+    return sortedRecords.filter((record) => record.date.startsWith(filterMonth));
+  }, [sortedRecords, filterMonth]);
 
   const handleDelete = async (id: string) => {
     if (!userId) return;
 
     if (window.confirm('Tem certeza que deseja excluir este registro?')) {
       try {
-        await apiClient.deleteTimeRecord(id, userId);
-        await loadRecords();
+        await deleteRecord.mutateAsync({ id, userId });
         onRecordUpdated?.();
       } catch (error) {
         console.error('Error deleting record:', error);
@@ -82,7 +56,7 @@ export default function TimeRecordsList({
   };
 
   const saveEdit = async () => {
-    if (!editingRecord || !editForm.name || !editForm.startTime || !editForm.endTime) {
+    if (!editingRecord || !editForm.name || !editForm.startTime || !editForm.endTime || !userId) {
       return;
     }
 
@@ -92,8 +66,7 @@ export default function TimeRecordsList({
         totalHours: timeUtils.calculateHoursDifference(editForm.startTime!, editForm.endTime!),
       } as Partial<TimeRecord>;
 
-      await apiClient.updateTimeRecord(editingRecord, updatedRecord);
-      await loadRecords();
+      await updateRecord.mutateAsync({ id: editingRecord, updates: updatedRecord, userId });
       onRecordUpdated?.();
       cancelEditing();
     } catch (error) {
@@ -123,7 +96,7 @@ export default function TimeRecordsList({
   };
 
   const getUniqueMonths = (): string[] => {
-    const months = [...new Set(records.map((record) => record.date.slice(0, 7)))];
+    const months = [...new Set(sortedRecords.map((record) => record.date.slice(0, 7)))];
     return months.sort().reverse();
   };
 
@@ -183,8 +156,15 @@ export default function TimeRecordsList({
         </div>
       </div>
 
-      {}
-      <div className="bg-gray-700 rounded-md p-4 mb-6 border border-gray-600">
+      {isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-400">Carregando registros...</p>
+        </div>
+      )}
+
+      {!isLoading && (
+        <>
+          <div className="bg-gray-700 rounded-md p-4 mb-6 border border-gray-600">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-blue-400">{filteredRecords.length}</p>
@@ -356,6 +336,8 @@ export default function TimeRecordsList({
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );

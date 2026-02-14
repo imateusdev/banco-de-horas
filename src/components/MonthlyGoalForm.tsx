@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
 import { timeUtils } from '@/lib/calculations';
+import { useMonthlyGoal, useSaveMonthlyGoal } from '@/hooks/useQueries';
 
 interface MonthlyGoalFormProps {
   onGoalUpdated?: () => void;
@@ -12,24 +12,14 @@ interface MonthlyGoalFormProps {
 export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFormProps) {
   const [month, setMonth] = useState(timeUtils.getCurrentMonth());
   const [hoursGoal, setHoursGoal] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const { data: existingGoal = 0 } = useMonthlyGoal(userId || '', month);
+  const saveGoal = useSaveMonthlyGoal();
+
   useEffect(() => {
-    const loadExistingGoal = async () => {
-      if (!userId) return;
-
-      try {
-        const existingGoal = await apiClient.getMonthlyGoal(userId, month);
-        setHoursGoal(existingGoal > 0 ? existingGoal.toString() : '');
-      } catch (error) {
-        console.error('Error loading existing goal:', error);
-        setHoursGoal('');
-      }
-    };
-
-    loadExistingGoal();
-  }, [month, userId]);
+    setHoursGoal(existingGoal > 0 ? existingGoal.toString() : '');
+  }, [existingGoal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,24 +36,23 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
       return;
     }
 
+    if (!userId) {
+      setError('ID de usuário não encontrado');
+      return;
+    }
+
     setError('');
-    setIsSubmitting(true);
 
     try {
-      if (!userId) {
-        setError('ID de usuário não encontrado');
-        return;
-      }
-
-      await apiClient.saveMonthlyGoal(userId, month, goalValue);
+      await saveGoal.mutateAsync({ userId, month, goal: goalValue });
       onGoalUpdated?.();
     } catch (error) {
       console.error('Error saving goal:', error);
       setError('Erro ao salvar meta');
-    } finally {
-      setIsSubmitting(false);
     }
   };
+
+  const isSubmitting = saveGoal.isPending;
 
   const formatMonthDisplay = (monthStr: string): string => {
     const [year, month] = monthStr.split('-');

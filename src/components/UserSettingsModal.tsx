@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useUserSettings, useSaveUserSettings } from '@/hooks/useQueries';
 
 interface UserSettingsModalProps {
   isOpen: boolean;
@@ -21,72 +22,41 @@ export default function UserSettingsModal({
   userId,
   onSettingsUpdated,
 }: UserSettingsModalProps) {
+  const { data, isLoading } = useUserSettings(userId);
+  const saveSettings = useSaveUserSettings();
+
   const [settings, setSettings] = useState<UserSettings>({
     defaultStartTime: null,
     defaultEndTime: null,
     workingDays: 'weekdays',
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      loadSettings();
+    if (data) {
+      setSettings({
+        defaultStartTime: data.defaultStartTime,
+        defaultEndTime: data.defaultEndTime,
+        workingDays: data.workingDays,
+      });
     }
-  }, [isOpen, userId]);
-
-  const loadSettings = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await fetch(`/api/user-settings?userId=${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSettings({
-          defaultStartTime: data.defaultStartTime,
-          defaultEndTime: data.defaultEndTime,
-          workingDays: data.workingDays,
-        });
-      } else {
-        throw new Error('Erro ao carregar configurações');
-      }
-    } catch (error) {
-      console.error('Error loading user settings:', error);
-      setError('Erro ao carregar configurações');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [data]);
 
   const handleSave = async () => {
-    setIsSaving(true);
     setError('');
 
     try {
-      const response = await fetch('/api/user-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          defaultStartTime: settings.defaultStartTime || null,
-          defaultEndTime: settings.defaultEndTime || null,
-          workingDays: settings.workingDays,
-        }),
+      await saveSettings.mutateAsync({
+        userId,
+        defaultStartTime: settings.defaultStartTime || null,
+        defaultEndTime: settings.defaultEndTime || null,
+        workingDays: settings.workingDays,
       });
-
-      if (response.ok) {
-        onSettingsUpdated?.();
-        onClose();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao salvar configurações');
-      }
+      onSettingsUpdated?.();
+      onClose();
     } catch (error) {
       console.error('Error saving user settings:', error);
       setError(error instanceof Error ? error.message : 'Erro ao salvar configurações');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -124,7 +94,7 @@ export default function UserSettingsModal({
             </button>
           </div>
 
-          {isLoading ? (
+          {isLoading || saveSettings.isPending ? (
             <div className="text-center py-8">
               <div className="text-gray-400">Carregando configurações...</div>
             </div>
@@ -199,18 +169,18 @@ export default function UserSettingsModal({
               <div className="flex space-x-3">
                 <button
                   onClick={handleSave}
-                  disabled={isSaving}
+                  disabled={saveSettings.isPending}
                   className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                    isSaving
+                    saveSettings.isPending
                       ? 'bg-gray-600 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white'
                   }`}
                 >
-                  {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+                  {saveSettings.isPending ? 'Salvando...' : 'Salvar Configurações'}
                 </button>
                 <button
                   onClick={onClose}
-                  disabled={isSaving}
+                  disabled={saveSettings.isPending}
                   className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
                 >
                   Cancelar

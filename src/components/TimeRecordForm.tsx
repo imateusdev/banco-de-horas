@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { timeUtils } from '@/lib/calculations';
-import { apiClient } from '@/lib/api-client';
+import { useUserSettings, useCreateTimeRecord, useCreateHourConversion } from '@/hooks/useQueries';
 import UserSettingsModal from './UserSettingsModal';
 
 interface TimeRecordFormProps {
@@ -19,7 +19,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     type: 'work' as 'work' | 'time_off',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isMultipleMode, setIsMultipleMode] = useState(false);
   const [multipleDays, setMultipleDays] = useState<
@@ -30,37 +29,21 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       type: 'work' | 'time_off';
     }>
   >([]);
-  const [userSettings, setUserSettings] = useState<{
-    defaultStartTime: string | null;
-    defaultEndTime: string | null;
-    workingDays: 'weekdays' | 'all' | 'weekends';
-  } | null>(null);
-
-  const loadUserSettings = useCallback(async () => {
-    if (!userId) return;
-
-    try {
-      const response = await fetch(`/api/user-settings?userId=${userId}`);
-      if (response.ok) {
-        const settings = await response.json();
-        console.log('Configurações carregadas:', settings);
-        setUserSettings(settings);
-
-        if (settings.defaultStartTime && !formData.startTime) {
-          setFormData((prev) => ({ ...prev, startTime: settings.defaultStartTime }));
-        }
-        if (settings.defaultEndTime && !formData.endTime) {
-          setFormData((prev) => ({ ...prev, endTime: settings.defaultEndTime }));
-        }
-      }
-    } catch (error) {
-      console.error('Error loading user settings:', error);
-    }
-  }, [userId, formData.startTime, formData.endTime]);
+  const { data: userSettings } = useUserSettings(userId || '');
+  const createRecord = useCreateTimeRecord();
+  const createConversion = useCreateHourConversion();
+  const isSubmitting = createRecord.isPending || createConversion.isPending;
 
   useEffect(() => {
-    loadUserSettings();
-  }, [loadUserSettings]);
+    if (userSettings) {
+      if (userSettings.defaultStartTime && !formData.startTime) {
+        setFormData((prev) => ({ ...prev, startTime: userSettings.defaultStartTime || '' }));
+      }
+      if (userSettings.defaultEndTime && !formData.endTime) {
+        setFormData((prev) => ({ ...prev, endTime: userSettings.defaultEndTime || '' }));
+      }
+    }
+  }, [userSettings]);
 
   const isDateAllowed = (dateStr: string): boolean => {
     if (!userSettings) {
@@ -159,8 +142,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       if (isMultipleMode) {
         const validDays = multipleDays.filter(
@@ -182,24 +163,20 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             day.type
           );
 
-          await apiClient.createTimeRecord(record);
+          await createRecord.mutateAsync(record);
 
           if (record.type === 'time_off') {
-            try {
-              const conversion = {
-                id: timeUtils.generateId(),
-                userId: userId || '',
-                hours: record.totalHours,
-                amount: 0,
-                type: 'time_off' as 'money' | 'time_off',
-                date: record.date,
-                createdAt: new Date().toISOString(),
-              };
+            const conversion = {
+              id: timeUtils.generateId(),
+              userId: userId || '',
+              hours: record.totalHours,
+              amount: 0,
+              type: 'time_off' as 'money' | 'time_off',
+              date: record.date,
+              createdAt: new Date().toISOString(),
+            };
 
-              await apiClient.createHourConversion(conversion);
-            } catch (error) {
-              console.error('Error saving hour conversion for time off:', error);
-            }
+            await createConversion.mutateAsync(conversion);
           }
         }
 
@@ -214,24 +191,20 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           formData.type
         );
 
-        await apiClient.createTimeRecord(record);
+        await createRecord.mutateAsync(record);
 
         if (record.type === 'time_off') {
-          try {
-            const conversion = {
-              id: timeUtils.generateId(),
-              userId: userId || '',
-              hours: record.totalHours,
-              amount: 0,
-              type: 'time_off' as 'money' | 'time_off',
-              date: record.date,
-              createdAt: new Date().toISOString(),
-            };
+          const conversion = {
+            id: timeUtils.generateId(),
+            userId: userId || '',
+            hours: record.totalHours,
+            amount: 0,
+            type: 'time_off' as 'money' | 'time_off',
+            date: record.date,
+            createdAt: new Date().toISOString(),
+          };
 
-            await apiClient.createHourConversion(conversion);
-          } catch (error) {
-            console.error('Error saving hour conversion for time off:', error);
-          }
+          await createConversion.mutateAsync(conversion);
         }
 
         setFormData({
@@ -246,8 +219,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
     } catch (error) {
       console.error('Error saving record:', error);
       setErrors({ submit: 'Erro ao salvar registro. Tente novamente.' });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -650,9 +621,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           isOpen={isSettingsModalOpen}
           onClose={() => setIsSettingsModalOpen(false)}
           userId={userId}
-          onSettingsUpdated={() => {
-            loadUserSettings();
-          }}
+          onSettingsUpdated={() => {}}
         />
       )}
     </div>

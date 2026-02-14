@@ -1,22 +1,11 @@
 import { NextRequest } from 'next/server';
-import {
-  getUserFromRequest,
-  isAdmin,
-  unauthorized,
-  badRequest,
-  serverError,
-} from '@/lib/server/auth';
+import { badRequest } from '@/lib/server/auth';
+import { withAdminAccess, getJsonBody } from '@/lib/server/api-helpers';
 import { adminAuth } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-    if (!isAdmin(user)) {
-      return Response.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
-    }
-
-    const { email } = await request.json();
+  return withAdminAccess(request, async (user, req) => {
+    const { email } = await getJsonBody<{ email: string }>(req);
 
     if (!email) {
       return badRequest('Email is required');
@@ -58,8 +47,5 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Usuário ${email} rebaixado para colaborador`,
     });
-  } catch (error) {
-    console.error('Error demoting user:', error);
-    return serverError('Failed to demote user');
-  }
+  });
 }

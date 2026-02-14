@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest } from '@/lib/server/auth';
+import { withAuth, getQueryParam } from '@/lib/server/api-helpers';
 import {
   getTimeRecordsByUser,
   getUserMonthlyGoal,
@@ -9,16 +9,10 @@ import { timeUtils } from '@/lib/calculations';
 import { DailyStats, MonthlyStats, AccumulatedHours } from '@/types';
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+  return withAuth(request, async (user, req) => {
     const userId = user.uid;
-    const { searchParams } = new URL(request.url);
-    const selectedDate = searchParams.get('date') || timeUtils.getCurrentDate();
-    const selectedMonth = searchParams.get('month') || timeUtils.getCurrentMonth();
+    const selectedDate = getQueryParam(req, 'date') || timeUtils.getCurrentDate();
+    const selectedMonth = getQueryParam(req, 'month') || timeUtils.getCurrentMonth();
 
     const [timeRecords, monthlyGoal, hourConversions] = await Promise.all([
       getTimeRecordsByUser(userId),
@@ -79,8 +73,5 @@ export async function GET(request: NextRequest) {
       accumulatedHours,
       hourConversions,
     });
-  } catch (error) {
-    console.error('Dashboard API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }

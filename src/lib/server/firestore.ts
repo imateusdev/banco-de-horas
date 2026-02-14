@@ -8,7 +8,7 @@ export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]
       .collection('timeRecords')
       .where('userId', '==', userId)
       .orderBy('date', 'desc')
-      .orderBy('createdAt', 'desc')
+      .limit(500)
       .get();
 
     return snapshot.docs.map((doc) => {
@@ -206,6 +206,7 @@ export async function getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]
     .collection('monthlyGoals')
     .where('userId', '==', userId)
     .orderBy('month', 'desc')
+    .limit(24)
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -253,7 +254,7 @@ export async function getUserHourConversions(userId: string): Promise<HourConver
     .collection('hourConversions')
     .where('userId', '==', userId)
     .orderBy('date', 'desc')
-    .orderBy('createdAt', 'desc')
+    .limit(200)
     .get();
 
   return snapshot.docs.map((doc) => {

@@ -19,7 +19,6 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'register' | 'goal' | 'conversion' | 'history'
   >('dashboard');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,10 +35,6 @@ export default function UserDashboard() {
 
     loadUser();
   }, [userSlug, router]);
-
-  const triggerRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
 
   const handleBackToUsers = () => {
     router.push('/');
@@ -108,48 +103,30 @@ export default function UserDashboard() {
       {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard refreshTrigger={refreshTrigger} userId={user.id} />
+          <StatsDashboard  userId={user.id} />
         )}
 
         {activeTab === 'register' && (
           <TimeRecordForm
             userId={user.id}
             userName={user.name}
-            onRecordAdded={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
+            onRecordAdded={() => setActiveTab('dashboard')}
           />
         )}
 
         {activeTab === 'goal' && (
-          <MonthlyGoalForm
-            userId={user.id}
-            onGoalUpdated={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
-          />
+          <MonthlyGoalForm userId={user.id} onGoalUpdated={() => setActiveTab('dashboard')} />
         )}
 
         {activeTab === 'conversion' && (
           <HourConversionForm
             userId={user.id}
             userName={user.name}
-            onConversionAdded={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
+            onConversionAdded={() => setActiveTab('dashboard')}
           />
         )}
 
-        {activeTab === 'history' && (
-          <TimeRecordsList
-            userId={user.id}
-            refreshTrigger={refreshTrigger}
-            onRecordUpdated={triggerRefresh}
-          />
-        )}
+        {activeTab === 'history' && <TimeRecordsList userId={user.id} />}
       </main>
     </div>
   );

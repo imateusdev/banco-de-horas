@@ -1,59 +1,38 @@
 import { NextRequest } from 'next/server';
-import {
-  getUserFromRequest,
-  canAccessUserData,
-  unauthorized,
-  serverError,
-} from '@/lib/server/auth';
+import { withUserAccess, getQueryParam, getJsonBody, successResponse } from '@/lib/server/api-helpers';
 import { getUserMonthlyGoals, getUserMonthlyGoal, saveMonthlyGoal } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
+  return withUserAccess(
+    request,
+    (req) => getQueryParam(req, 'userId'),
+    async (user, userId, req) => {
+      const month = getQueryParam(req, 'month');
 
-    const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month');
-    const targetUserId = searchParams.get('userId') || user.uid;
-
-    if (!canAccessUserData(user, targetUserId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only access your own monthly goals' },
-        { status: 403 }
-      );
-    }
-
-    if (month) {
-      const goal = await getUserMonthlyGoal(targetUserId, month);
-      return Response.json({ goal });
-    } else {
-      const goals = await getUserMonthlyGoals(targetUserId);
-      return Response.json(goals);
-    }
-  } catch (error) {
-    console.error('Error fetching monthly goals:', error);
-    return serverError('Failed to fetch monthly goals');
-  }
+      if (month) {
+        const goal = await getUserMonthlyGoal(userId, month);
+        return Response.json({ goal });
+      } else {
+        const goals = await getUserMonthlyGoals(userId);
+        return Response.json(goals);
+      }
+    },
+    'Forbidden - You can only access your own monthly goals'
+  );
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-
-    const goal = await request.json();
-
-    if (!canAccessUserData(user, goal.userId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only create your own monthly goals' },
-        { status: 403 }
-      );
-    }
-
-    await saveMonthlyGoal(goal);
-    return Response.json({ success: true }, { status: 201 });
-  } catch (error) {
-    console.error('Error saving monthly goal:', error);
-    return serverError('Failed to save monthly goal');
-  }
+  return withUserAccess(
+    request,
+    async (req) => {
+      const body = await getJsonBody<{ userId: string }>(req);
+      return body.userId;
+    },
+    async (user, userId, req) => {
+      const goal = await getJsonBody<any>(req);
+      await saveMonthlyGoal(goal);
+      return successResponse({ success: true }, 201);
+    },
+    'Forbidden - You can only create your own monthly goals'
+  );
 }

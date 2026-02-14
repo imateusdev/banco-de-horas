@@ -1,182 +1,86 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect, useState } from 'react';
+import {
+  useAdminUsers,
+  useAddUser,
+  usePromoteUser,
+  useDemoteUser,
+  useDeleteUser,
+} from '@/hooks/useQueries';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface AuthorizedUser {
-  uid?: string;
-  email: string;
-  role: 'admin' | 'collaborator';
-  displayName?: string;
-  status: 'active' | 'pending';
-  addedBy?: string;
-  addedAt?: string;
-}
-
 export default function AdminUsersPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, isAdmin } = useAuth();
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<AuthorizedUser[]>([]);
+
+  const { data: users = [], isLoading: usersLoading } = useAdminUsers();
+  const addUser = useAddUser();
+  const promoteUser = usePromoteUser();
+  const demoteUser = useDemoteUser();
+  const deleteUser = useDeleteUser();
+
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'collaborator'>('collaborator');
-  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/');
-    } else if (user) {
-      checkAdminAndLoadUsers();
-    }
-  }, [user, authLoading]);
+  if (authLoading || usersLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-lg">Carregando...</div>
+      </div>
+    );
+  }
 
-  const checkAdminAndLoadUsers = async () => {
-    try {
-      const token = await user!.getIdToken(true);
-      const response = await fetch('/api/auth/check', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await response.json();
-
-      if (!data.authorized || data.role !== 'admin') {
-        router.push('/dashboard');
-        return;
-      }
-
-      setIsAdmin(true);
-      await loadUsers();
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      router.push('/');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const token = await user!.getIdToken();
-      const response = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
-      }
-    } catch (error) {
-      console.error('Error loading users:', error);
-      setError('Erro ao carregar usuários');
-    }
-  };
+  if (!user || !isAdmin) {
+    router.push('/');
+    return null;
+  }
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setActionLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = await user!.getIdToken();
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          email: newUserEmail,
-          role: newUserRole,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao adicionar usuário');
-      }
-
+      await addUser.mutateAsync({ email: newUserEmail, role: newUserRole });
       setSuccess(
         `Usuário ${newUserEmail} adicionado com sucesso como ${newUserRole === 'admin' ? 'administrador' : 'colaborador'}`
       );
       setNewUserEmail('');
       setNewUserRole('collaborator');
-      await loadUsers();
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handlePromote = async (email: string) => {
     if (!confirm(`Promover ${email} para administrador?`)) return;
 
-    setActionLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = await user!.getIdToken();
-      const response = await fetch('/api/admin/users/promote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao promover usuário');
-      }
-
+      await promoteUser.mutateAsync(email);
       setSuccess(`${email} promovido para administrador`);
-      await loadUsers();
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleDemote = async (email: string) => {
     if (!confirm(`Rebaixar ${email} para colaborador?`)) return;
 
-    setActionLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = await user!.getIdToken();
-      const response = await fetch('/api/admin/users/demote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao rebaixar usuário');
-      }
-
+      await demoteUser.mutateAsync(email);
       setSuccess(`${email} rebaixado para colaborador`);
-      await loadUsers();
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -184,33 +88,14 @@ export default function AdminUsersPage() {
     if (!confirm(`Remover autorização de ${email}? O usuário não poderá mais acessar o sistema.`))
       return;
 
-    setActionLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const token = await user!.getIdToken();
-      const response = await fetch('/api/admin/users', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao remover usuário');
-      }
-
+      await deleteUser.mutateAsync(email);
       setSuccess(`Autorização de ${email} removida`);
-      await loadUsers();
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -218,18 +103,6 @@ export default function AdminUsersPage() {
     await signOut();
     router.push('/');
   };
-
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
 
   const activeAdmins = users.filter((u) => u.role === 'admin' && u.status === 'active');
   const activeCollaborators = users.filter(
@@ -323,10 +196,10 @@ export default function AdminUsersPage() {
 
             <button
               type="submit"
-              disabled={actionLoading || !newUserEmail}
+              disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending || !newUserEmail}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {actionLoading ? 'Autorizando...' : 'Autorizar Usuário'}
+              {addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending ? 'Autorizando...' : 'Autorizar Usuário'}
             </button>
           </form>
         </div>
@@ -364,7 +237,7 @@ export default function AdminUsersPage() {
                       )}
                       <button
                         onClick={() => handleDemote(admin.email)}
-                        disabled={actionLoading || activeAdmins.length === 1}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending || activeAdmins.length === 1}
                         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={
                           activeAdmins.length === 1
@@ -376,7 +249,7 @@ export default function AdminUsersPage() {
                       </button>
                       <button
                         onClick={() => handleRemove(admin.email)}
-                        disabled={actionLoading || activeAdmins.length === 1}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending || activeAdmins.length === 1}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={
                           activeAdmins.length === 1
@@ -422,14 +295,14 @@ export default function AdminUsersPage() {
                       )}
                       <button
                         onClick={() => handlePromote(collaborator.email)}
-                        disabled={actionLoading}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending}
                         className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Promover
                       </button>
                       <button
                         onClick={() => handleRemove(collaborator.email)}
-                        disabled={actionLoading}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Remover
@@ -461,7 +334,7 @@ export default function AdminUsersPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleRemove(admin.email)}
-                        disabled={actionLoading}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Remover
@@ -494,7 +367,7 @@ export default function AdminUsersPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleRemove(collaborator.email)}
-                        disabled={actionLoading}
+                        disabled={addUser.isPending || promoteUser.isPending || demoteUser.isPending || deleteUser.isPending}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Remover

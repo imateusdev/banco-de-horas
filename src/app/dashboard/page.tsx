@@ -15,11 +15,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'register' | 'goal' | 'conversion' | 'history'
   >('dashboard');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const triggerRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
 
   if (authLoading) {
     return (
@@ -96,48 +91,30 @@ export default function Dashboard() {
       {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard refreshTrigger={refreshTrigger} userId={user.uid} />
+          <StatsDashboard  userId={user.uid} />
         )}
 
         {activeTab === 'register' && (
           <TimeRecordForm
             userId={user.uid}
             userName={user.displayName || user.email || 'Usuário'}
-            onRecordAdded={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
+            onRecordAdded={() => setActiveTab('dashboard')}
           />
         )}
 
         {activeTab === 'goal' && (
-          <MonthlyGoalForm
-            userId={user.uid}
-            onGoalUpdated={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
-          />
+          <MonthlyGoalForm userId={user.uid} onGoalUpdated={() => setActiveTab('dashboard')} />
         )}
 
         {activeTab === 'conversion' && (
           <HourConversionForm
             userId={user.uid}
             userName={user.displayName || user.email || 'Usuário'}
-            onConversionAdded={() => {
-              triggerRefresh();
-              setActiveTab('dashboard');
-            }}
+            onConversionAdded={() => setActiveTab('dashboard')}
           />
         )}
 
-        {activeTab === 'history' && (
-          <TimeRecordsList
-            userId={user.uid}
-            refreshTrigger={refreshTrigger}
-            onRecordUpdated={triggerRefresh}
-          />
-        )}
+        {activeTab === 'history' && <TimeRecordsList userId={user.uid} />}
       </main>
     </div>
   );

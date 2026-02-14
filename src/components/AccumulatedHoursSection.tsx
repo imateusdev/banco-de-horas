@@ -1,58 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { useMemo } from 'react';
 import { timeUtils } from '@/lib/calculations';
 import { AccumulatedHours } from '@/types';
+import { useTimeRecords, useHourConversions } from '@/hooks/useQueries';
 
 interface AccumulatedHoursSectionProps {
   userId?: string;
-  refreshTrigger?: number;
 }
 
-export default function AccumulatedHoursSection({
-  userId,
-  refreshTrigger,
-}: AccumulatedHoursSectionProps) {
-  const [accumulatedHours, setAccumulatedHours] = useState<AccumulatedHours | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSectionProps) {
+  const { data: records = [], isLoading: recordsLoading } = useTimeRecords(userId || '');
+  const { data: conversions = [], isLoading: conversionsLoading } = useHourConversions(
+    userId || ''
+  );
 
-  useEffect(() => {
-    const loadAccumulatedHours = async () => {
-      if (!userId) return;
+  const accumulatedHours = useMemo((): AccumulatedHours | null => {
+    if (!userId || recordsLoading || conversionsLoading) return null;
 
-      setLoading(true);
-      try {
-        const [totalHours, conversions] = await Promise.all([
-          apiClient.getAccumulatedHours(userId),
-          apiClient.getHourConversions(userId),
-        ]);
+    const convertedToMoney = conversions
+      .filter((c) => c.type === 'money')
+      .reduce((sum, c) => sum + c.hours, 0);
 
-        const convertedToMoney = conversions
-          .filter((c) => c.type === 'money')
-          .reduce((sum, c) => sum + c.hours, 0);
+    const usedForTimeOff = conversions
+      .filter((c) => c.type === 'time_off')
+      .reduce((sum, c) => sum + c.hours, 0);
 
-        const usedForTimeOff = conversions
-          .filter((c) => c.type === 'time_off')
-          .reduce((sum, c) => sum + c.hours, 0);
+    const totalHours = records.reduce((sum, record) => sum + record.totalHours, 0);
+    const totalExtraHours = totalHours + convertedToMoney + usedForTimeOff;
 
-        const totalExtraHours = totalHours + convertedToMoney + usedForTimeOff;
-
-        setAccumulatedHours({
-          totalExtraHours,
-          availableHours: totalHours,
-          convertedToMoney,
-          usedForTimeOff,
-        });
-      } catch (error) {
-        console.error('Error loading accumulated hours:', error);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      totalExtraHours,
+      availableHours: totalHours,
+      convertedToMoney,
+      usedForTimeOff,
     };
+  }, [userId, records, conversions, recordsLoading, conversionsLoading]);
 
-    loadAccumulatedHours();
-  }, [userId, refreshTrigger]);
+  const loading = recordsLoading || conversionsLoading;
 
   if (loading) {
     return (

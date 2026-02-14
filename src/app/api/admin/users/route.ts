@@ -1,22 +1,11 @@
 import { NextRequest } from 'next/server';
-import {
-  getUserFromRequest,
-  isAdmin,
-  unauthorized,
-  badRequest,
-  serverError,
-} from '@/lib/server/auth';
+import { badRequest } from '@/lib/server/auth';
+import { withAdminAccess, getJsonBody } from '@/lib/server/api-helpers';
 import { adminAuth } from '@/lib/firebase/admin';
 import { getPreAuthorizedEmails } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-    if (!isAdmin(user)) {
-      return Response.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
-    }
-
+  return withAdminAccess(request, async () => {
     const listUsersResult = await adminAuth.listUsers();
     const authorizedUsers = [];
 
@@ -53,21 +42,12 @@ export async function GET(request: NextRequest) {
     });
 
     return Response.json({ users: allUsers });
-  } catch (error) {
-    console.error('Error listing users:', error);
-    return serverError('Failed to list users');
-  }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-    if (!isAdmin(user)) {
-      return Response.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
-    }
-
-    const { email, role } = await request.json();
+  return withAdminAccess(request, async (user, req) => {
+    const { email, role } = await getJsonBody<{ email: string; role?: string }>(req);
 
     if (!email) {
       return badRequest('Email is required');
@@ -77,7 +57,7 @@ export async function POST(request: NextRequest) {
       return badRequest('Invalid role');
     }
 
-    const targetRole = role || 'collaborator';
+    const targetRole = (role || 'collaborator') as 'admin' | 'collaborator';
 
     let targetUser;
     try {
@@ -106,21 +86,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Usuário ${email} autorizado como ${targetRole}`,
     });
-  } catch (error) {
-    console.error('Error authorizing user:', error);
-    return serverError('Failed to authorize user');
-  }
+  });
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-    if (!isAdmin(user)) {
-      return Response.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
-    }
-
-    const { email } = await request.json();
+  return withAdminAccess(request, async (user, req) => {
+    const { email } = await getJsonBody<{ email: string }>(req);
 
     if (!email) {
       return badRequest('Email is required');
@@ -175,8 +146,5 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: `Autorização de ${email} removida`,
     });
-  } catch (error) {
-    console.error('Error removing user:', error);
-    return serverError('Failed to remove user');
-  }
+  });
 }

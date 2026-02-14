@@ -1,59 +1,37 @@
 import { NextRequest } from 'next/server';
-import {
-  getUserFromRequest,
-  canAccessUserData,
-  unauthorized,
-  badRequest,
-  serverError,
-} from '@/lib/server/auth';
+import { badRequest } from '@/lib/server/auth';
+import { withAuth, withUserAccess, getQueryParam, getJsonBody } from '@/lib/server/api-helpers';
 import { getUserSettings, createOrUpdateUserSettings } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
+  return withUserAccess(
+    request,
+    (req) => getQueryParam(req, 'userId'),
+    async (user, userId) => {
+      const settings = await getUserSettings(userId);
 
-    const { searchParams } = new URL(request.url);
-    const targetUserId = searchParams.get('userId') || user.uid;
+      if (!settings) {
+        return Response.json({
+          userId,
+          defaultStartTime: null,
+          defaultEndTime: null,
+          workingDays: 'weekdays',
+        });
+      }
 
-    if (!canAccessUserData(user, targetUserId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only access your own settings' },
-        { status: 403 }
-      );
-    }
-
-    const settings = await getUserSettings(targetUserId);
-
-    if (!settings) {
-      return Response.json({
-        userId: targetUserId,
-        defaultStartTime: null,
-        defaultEndTime: null,
-        workingDays: 'weekdays',
-      });
-    }
-
-    return Response.json(settings);
-  } catch (error) {
-    console.error('Error fetching user settings:', error);
-    return serverError('Failed to fetch user settings');
-  }
+      return Response.json(settings);
+    },
+    'Forbidden - You can only access your own settings'
+  );
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-
-    const { defaultStartTime, defaultEndTime, workingDays } = await request.json();
-
-    if (!canAccessUserData(user, user.uid)) {
-      return Response.json(
-        { error: 'Forbidden - You can only update your own settings' },
-        { status: 403 }
-      );
-    }
+  return withAuth(request, async (user, req) => {
+    const { defaultStartTime, defaultEndTime, workingDays } = await getJsonBody<{
+      defaultStartTime?: string | null;
+      defaultEndTime?: string | null;
+      workingDays?: string;
+    }>(req);
 
     if (workingDays && !['weekdays', 'all', 'weekends'].includes(workingDays)) {
       return badRequest('Invalid workingDays value');
@@ -70,13 +48,10 @@ export async function POST(request: NextRequest) {
     await createOrUpdateUserSettings(user.uid, {
       defaultStartTime,
       defaultEndTime,
-      workingDays: workingDays || 'weekdays',
+      workingDays: (workingDays || 'weekdays') as 'weekdays' | 'all' | 'weekends',
     });
 
     const settings = await getUserSettings(user.uid);
     return Response.json(settings);
-  } catch (error) {
-    console.error('Error saving user settings:', error);
-    return serverError('Failed to save user settings');
-  }
+  });
 }

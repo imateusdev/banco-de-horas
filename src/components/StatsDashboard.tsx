@@ -1,43 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { timeUtils } from '@/lib/calculations';
-import { apiClient } from '@/lib/api-client';
-import { DailyStats, MonthlyStats, AccumulatedHours } from '@/types';
+import { useDashboardData } from '@/hooks/useQueries';
 
 interface StatsDashboardProps {
   refreshTrigger?: number;
   userId?: string;
 }
 
-export default function StatsDashboard({ refreshTrigger, userId }: StatsDashboardProps) {
-  const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
-  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats | null>(null);
-  const [accumulatedHours, setAccumulatedHours] = useState<AccumulatedHours | null>(null);
+export default function StatsDashboard({ userId }: StatsDashboardProps) {
   const [selectedDate, setSelectedDate] = useState(timeUtils.getCurrentDate());
   const [selectedMonth, setSelectedMonth] = useState(timeUtils.getCurrentMonth());
-  const [loading, setLoading] = useState(false);
 
-  const loadStats = useCallback(async () => {
-    if (!userId) return;
+  const { data, isLoading: loading } = useDashboardData(
+    userId || '',
+    selectedDate,
+    selectedMonth
+  );
 
-    setLoading(true);
-    try {
-      const data = await apiClient.getDashboardData(selectedDate, selectedMonth);
-
-      setDailyStats(data.dailyStats);
-      setMonthlyStats(data.monthlyStats);
-      setAccumulatedHours(data.accumulatedHours);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedDate, selectedMonth, userId]);
-
-  useEffect(() => {
-    loadStats();
-  }, [selectedDate, selectedMonth, refreshTrigger, loadStats]);
+  const dailyStats = data?.dailyStats || null;
+  const monthlyStats = data?.monthlyStats || null;
+  const accumulatedHours = data?.accumulatedHours || null;
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr + 'T00:00:00');

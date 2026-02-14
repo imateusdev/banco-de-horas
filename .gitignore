@@ -48,3 +48,6 @@ next-env.d.ts
 *.db-journal
 /prisma/dev.db
 /prisma/*.db
+
+# firebase
+.firebaserc

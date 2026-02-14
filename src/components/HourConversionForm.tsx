@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { useState } from 'react';
 import { timeUtils } from '@/lib/calculations';
-import { AccumulatedHours, HourConversion } from '@/types';
+import { HourConversion } from '@/types';
+import { useCreateHourConversion, useDashboardData } from '@/hooks/useQueries';
 
 interface HourConversionFormProps {
   userId: string;
@@ -12,47 +12,22 @@ interface HourConversionFormProps {
 }
 
 export default function HourConversionForm({ userId, onConversionAdded }: HourConversionFormProps) {
-  const [accumulatedHours, setAccumulatedHours] = useState<AccumulatedHours | null>(null);
   const [formData, setFormData] = useState({
     hours: '',
     amount: '',
     type: 'money' as 'money' | 'time_off',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadAccumulatedHours = async () => {
-      try {
-        const [totalHours, conversions] = await Promise.all([
-          apiClient.getAccumulatedHours(userId),
-          apiClient.getHourConversions(userId),
-        ]);
+  const { data, isLoading: loading } = useDashboardData(
+    userId,
+    timeUtils.getCurrentDate(),
+    timeUtils.getCurrentMonth()
+  );
+  const createConversion = useCreateHourConversion();
 
-        const convertedToMoney = conversions
-          .filter((c) => c.type === 'money')
-          .reduce((sum, c) => sum + c.hours, 0);
-
-        const usedForTimeOff = conversions
-          .filter((c) => c.type === 'time_off')
-          .reduce((sum, c) => sum + c.hours, 0);
-
-        setAccumulatedHours({
-          totalExtraHours: totalHours,
-          availableHours: totalHours,
-          convertedToMoney,
-          usedForTimeOff,
-        });
-      } catch (error) {
-        console.error('Error loading accumulated hours:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAccumulatedHours();
-  }, [userId]);
+  const accumulatedHours = data?.accumulatedHours || null;
+  const isSubmitting = createConversion.isPending;
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -78,8 +53,6 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       const conversion: HourConversion = {
         id: timeUtils.generateId(),
@@ -91,7 +64,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         createdAt: new Date().toISOString(),
       };
 
-      await apiClient.createHourConversion(conversion);
+      await createConversion.mutateAsync(conversion);
 
       setFormData({
         hours: '',
@@ -99,32 +72,10 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         type: 'money',
       });
 
-      const [totalHours, conversions] = await Promise.all([
-        apiClient.getAccumulatedHours(userId),
-        apiClient.getHourConversions(userId),
-      ]);
-
-      const convertedToMoney = conversions
-        .filter((c) => c.type === 'money')
-        .reduce((sum, c) => sum + c.hours, 0);
-
-      const usedForTimeOff = conversions
-        .filter((c) => c.type === 'time_off')
-        .reduce((sum, c) => sum + c.hours, 0);
-
-      setAccumulatedHours({
-        totalExtraHours: totalHours,
-        availableHours: totalHours,
-        convertedToMoney,
-        usedForTimeOff,
-      });
-
       onConversionAdded?.();
     } catch (error) {
       console.error('Error saving conversion:', error);
       setErrors({ submit: 'Erro ao salvar conversão. Tente novamente.' });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

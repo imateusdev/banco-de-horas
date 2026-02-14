@@ -1,12 +1,6 @@
 import { NextRequest } from 'next/server';
-import {
-  getUserFromRequest,
-  unauthorized,
-  badRequest,
-  serverError,
-  canAccessUserData,
-  isAdmin,
-} from '@/lib/server/auth';
+import { badRequest, isAdmin } from '@/lib/server/auth';
+import { withAuth, withUserAccess, getQueryParam, getJsonBody, successResponse } from '@/lib/server/api-helpers';
 import {
   getTimeRecordsByUser,
   getAllTimeRecords,
@@ -16,117 +10,81 @@ import {
 } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-
-    const { searchParams } = new URL(request.url);
-    const targetUserId = searchParams.get('userId');
+  return withAuth(request, async (user, req) => {
+    const targetUserId = getQueryParam(req, 'userId');
 
     if (!targetUserId && isAdmin(user)) {
       const allRecords = await getAllTimeRecords();
       return Response.json(allRecords);
     }
 
-    const userIdToFetch = targetUserId || user.uid;
-
-    if (!canAccessUserData(user, userIdToFetch)) {
-      return Response.json(
-        { error: 'Forbidden - You can only access your own records' },
-        { status: 403 }
-      );
-    }
-
-    const records = await getTimeRecordsByUser(userIdToFetch);
-    return Response.json(records);
-  } catch (error) {
-    console.error('Error fetching time records:', error);
-    return serverError('Failed to fetch time records');
-  }
+    return withUserAccess(
+      req,
+      () => targetUserId,
+      async (user, userId) => {
+        const records = await getTimeRecordsByUser(userId);
+        return Response.json(records);
+      },
+      'Forbidden - You can only access your own records'
+    );
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
-
-    const record = await request.json();
-
-    if (!canAccessUserData(user, record.userId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only create records for yourself' },
-        { status: 403 }
-      );
-    }
-
-    await createTimeRecord(record);
-    return Response.json({ success: true }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating time record:', error);
-    return serverError('Failed to create time record');
-  }
+  return withUserAccess(
+    request,
+    async (req) => {
+      const body = await getJsonBody<{ userId: string }>(req);
+      return body.userId;
+    },
+    async (user, userId, req) => {
+      const record = await getJsonBody<any>(req);
+      await createTimeRecord(record);
+      return successResponse({ success: true }, 201);
+    },
+    'Forbidden - You can only create records for yourself'
+  );
 }
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
+  return withUserAccess(
+    request,
+    async (req) => {
+      const body = await getJsonBody<{ userId: string }>(req);
+      return body.userId;
+    },
+    async (user, userId, req) => {
+      const { id, ...updates } = await getJsonBody<{ id: string; [key: string]: any }>(req);
 
-    const { id, userId, ...updates } = await request.json();
+      if (!id) {
+        return badRequest('Record ID is required');
+      }
 
-    if (!id) {
-      return badRequest('Record ID is required');
-    }
-
-    if (!canAccessUserData(user, userId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only update your own records' },
-        { status: 403 }
-      );
-    }
-
-    await updateTimeRecord(id, userId, updates);
-    return Response.json({ success: true });
-  } catch (error: any) {
-    console.error('Error updating time record:', error);
-    if (error.message.includes('unauthorized')) {
-      return unauthorized();
-    }
-    return serverError('Failed to update time record');
-  }
+      await updateTimeRecord(id, userId, updates);
+      return successResponse();
+    },
+    'Forbidden - You can only update your own records'
+  );
 }
 
 export async function DELETE(request: NextRequest) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) return unauthorized();
+  return withUserAccess(
+    request,
+    (req) => getQueryParam(req, 'userId'),
+    async (user, userId, req) => {
+      const id = getQueryParam(req, 'id');
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    const userId = searchParams.get('userId');
+      if (!id) {
+        return badRequest('Record ID is required');
+      }
 
-    if (!id) {
-      return badRequest('Record ID is required');
-    }
+      if (!userId) {
+        return badRequest('User ID is required');
+      }
 
-    if (!userId) {
-      return badRequest('User ID is required');
-    }
-
-    if (!canAccessUserData(user, userId)) {
-      return Response.json(
-        { error: 'Forbidden - You can only delete your own records' },
-        { status: 403 }
-      );
-    }
-
-    await deleteTimeRecord(id, userId);
-    return Response.json({ success: true });
-  } catch (error: any) {
-    console.error('Error deleting time record:', error);
-    if (error.message.includes('unauthorized')) {
-      return unauthorized();
-    }
-    return serverError('Failed to delete time record');
-  }
+      await deleteTimeRecord(id, userId);
+      return successResponse();
+    },
+    'Forbidden - You can only delete your own records'
+  );
 }
