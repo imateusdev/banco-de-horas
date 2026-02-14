@@ -5,7 +5,6 @@ import { getPreAuthorizedEmail } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
   try {
-    // Extrair e verificar token manualmente (sem usar getUserFromRequest para evitar loop)
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return unauthorized();
@@ -14,7 +13,6 @@ export async function GET(request: NextRequest) {
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
 
-    // Se o usuário já está autorizado, retorna suas informações
     if (decodedToken.authorized && decodedToken.role) {
       return Response.json({
         authorized: true,
@@ -32,7 +30,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Verifica se é o primeiro usuário (se não há nenhum usuário autorizado)
     const listUsersResult = await adminAuth.listUsers();
     let hasAuthorizedUsers = false;
 
@@ -43,7 +40,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Se não há usuários autorizados, este é o primeiro usuário - torna admin
     if (!hasAuthorizedUsers) {
       await adminAuth.setCustomUserClaims(decodedToken.uid, {
         authorized: true,
@@ -59,11 +55,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Verifica se o email está na lista de pré-autorizados
     const preAuthorized = await getPreAuthorizedEmail(userEmail);
 
     if (preAuthorized) {
-      // Autoriza automaticamente com a role pré-definida
       await adminAuth.setCustomUserClaims(decodedToken.uid, {
         authorized: true,
         role: preAuthorized.role,
@@ -78,7 +72,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Usuário não está autorizado
     return Response.json({
       authorized: false,
       email: userEmail,

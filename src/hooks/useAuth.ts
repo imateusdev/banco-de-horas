@@ -20,7 +20,6 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
-      // Verificar se o usuário é admin através do token
       if (user) {
         try {
           const tokenResult = await user.getIdTokenResult();
@@ -43,15 +42,13 @@ export function useAuth() {
     try {
       setError(null);
       const provider = new GoogleAuthProvider();
-      // Força o usuário a selecionar uma conta Google
+
       provider.setCustomParameters({
         prompt: 'select_account',
       });
 
       const result = await signInWithPopup(auth, provider);
 
-      // Verificar se o email está autorizado (validação client-side)
-      // A validação real acontece no servidor
       if (!result.user.email) {
         await firebaseSignOut(auth);
         throw new Error('Email não encontrado na conta Google');

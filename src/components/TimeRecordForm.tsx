@@ -22,12 +22,14 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isMultipleMode, setIsMultipleMode] = useState(false);
-  const [multipleDays, setMultipleDays] = useState<Array<{
-    date: string;
-    startTime: string;
-    endTime: string;
-    type: 'work' | 'time_off';
-  }>>([]);
+  const [multipleDays, setMultipleDays] = useState<
+    Array<{
+      date: string;
+      startTime: string;
+      endTime: string;
+      type: 'work' | 'time_off';
+    }>
+  >([]);
   const [userSettings, setUserSettings] = useState<{
     defaultStartTime: string | null;
     defaultEndTime: string | null;
@@ -36,20 +38,19 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
   const loadUserSettings = useCallback(async () => {
     if (!userId) return;
-    
+
     try {
       const response = await fetch(`/api/user-settings?userId=${userId}`);
       if (response.ok) {
         const settings = await response.json();
-        console.log('Configurações carregadas:', settings); // Debug
+        console.log('Configurações carregadas:', settings);
         setUserSettings(settings);
-        
-        // Pré-preencher horários padrão se existirem e os campos estiverem vazios
+
         if (settings.defaultStartTime && !formData.startTime) {
-          setFormData(prev => ({ ...prev, startTime: settings.defaultStartTime }));
+          setFormData((prev) => ({ ...prev, startTime: settings.defaultStartTime }));
         }
         if (settings.defaultEndTime && !formData.endTime) {
-          setFormData(prev => ({ ...prev, endTime: settings.defaultEndTime }));
+          setFormData((prev) => ({ ...prev, endTime: settings.defaultEndTime }));
         }
       }
     } catch (error) {
@@ -63,20 +64,22 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
   const isDateAllowed = (dateStr: string): boolean => {
     if (!userSettings) {
-      console.log('userSettings não carregadas ainda'); // Debug
+      console.log('userSettings não carregadas ainda');
       return true;
     }
-    
+
     const date = new Date(dateStr + 'T00:00:00');
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-    
-    console.log(`Verificando data ${dateStr}, dia da semana: ${dayOfWeek}, configuração: ${userSettings.workingDays}`); // Debug
-    
+    const dayOfWeek = date.getDay();
+
+    console.log(
+      `Verificando data ${dateStr}, dia da semana: ${dayOfWeek}, configuração: ${userSettings.workingDays}`
+    );
+
     switch (userSettings.workingDays) {
       case 'weekdays':
-        return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
+        return dayOfWeek >= 1 && dayOfWeek <= 5;
       case 'weekends':
-        return dayOfWeek === 0 || dayOfWeek === 6; // Saturday and Sunday
+        return dayOfWeek === 0 || dayOfWeek === 6;
       case 'all':
       default:
         return true;
@@ -90,7 +93,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       if (multipleDays.length === 0) {
         newErrors.submit = 'Adicione pelo menos um dia para registrar';
       } else {
-        // Validar cada dia no modo múltiplo
         multipleDays.forEach((day, index) => {
           if (!day.date) {
             newErrors[`day_${index}_date`] = 'Data é obrigatória';
@@ -103,21 +105,25 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           if (!day.endTime) {
             newErrors[`day_${index}_endTime`] = 'Horário de fim obrigatório';
           }
-          if (day.startTime && day.endTime && !timeUtils.isValidTimeRange(day.startTime, day.endTime)) {
+          if (
+            day.startTime &&
+            day.endTime &&
+            !timeUtils.isValidTimeRange(day.startTime, day.endTime)
+          ) {
             newErrors[`day_${index}_endTime`] = 'Horário inválido';
           }
         });
       }
     } else {
-      // Validação do modo único
       if (!formData.date) {
         newErrors.date = 'Data é obrigatória';
       } else if (!isDateAllowed(formData.date)) {
-        const workingDaysText = userSettings?.workingDays === 'weekdays' 
-          ? 'dias de semana' 
-          : userSettings?.workingDays === 'weekends' 
-          ? 'finais de semana' 
-          : 'todos os dias';
+        const workingDaysText =
+          userSettings?.workingDays === 'weekdays'
+            ? 'dias de semana'
+            : userSettings?.workingDays === 'weekends'
+              ? 'finais de semana'
+              : 'todos os dias';
         newErrors.date = `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}`;
       }
 
@@ -133,7 +139,11 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         newErrors.endTime = 'Formato inválido (use HH:MM)';
       }
 
-      if (formData.startTime && formData.endTime && !timeUtils.isValidTimeRange(formData.startTime, formData.endTime)) {
+      if (
+        formData.startTime &&
+        formData.endTime &&
+        !timeUtils.isValidTimeRange(formData.startTime, formData.endTime)
+      ) {
         newErrors.endTime = 'Horário de término deve ser diferente do início';
       }
     }
@@ -144,7 +154,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -153,11 +163,13 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
     try {
       if (isMultipleMode) {
-        // Salvar múltiplos registros
-        const validDays = multipleDays.filter(day => 
-          day.date && day.startTime && day.endTime && 
-          timeUtils.isValidTimeRange(day.startTime, day.endTime) &&
-          isDateAllowed(day.date)
+        const validDays = multipleDays.filter(
+          (day) =>
+            day.date &&
+            day.startTime &&
+            day.endTime &&
+            timeUtils.isValidTimeRange(day.startTime, day.endTime) &&
+            isDateAllowed(day.date)
         );
 
         for (const day of validDays) {
@@ -172,7 +184,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
           await apiClient.createTimeRecord(record);
 
-          // Se for folga, criar conversão automática
           if (record.type === 'time_off') {
             try {
               const conversion = {
@@ -192,10 +203,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           }
         }
 
-        // Reset multiple days
         setMultipleDays([]);
       } else {
-        // Salvar registro único
         const record = timeUtils.createTimeRecord(
           userId || '',
           userName || 'Usuário',
@@ -207,7 +216,6 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
         await apiClient.createTimeRecord(record);
 
-        // Se for folga, criar uma conversão automática para deduzir do banco de horas
         if (record.type === 'time_off') {
           try {
             const conversion = {
@@ -223,11 +231,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             await apiClient.createHourConversion(conversion);
           } catch (error) {
             console.error('Error saving hour conversion for time off:', error);
-            // Não interromper o fluxo se houver erro na conversão
           }
         }
 
-        // Reset form
         setFormData({
           date: timeUtils.getCurrentDate(),
           startTime: '',
@@ -247,36 +253,41 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
   const getWeekdayName = (dateStr: string): string => {
     const date = new Date(dateStr + 'T00:00:00');
-    const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    const weekdays = [
+      'Domingo',
+      'Segunda-feira',
+      'Terça-feira',
+      'Quarta-feira',
+      'Quinta-feira',
+      'Sexta-feira',
+      'Sábado',
+    ];
     return weekdays[date.getDay()];
   };
 
   const getDateRestrictions = (): { min?: string; max?: string } => {
-    // Permitir registrar até 30 dias no passado e 30 dias no futuro
     const today = new Date();
     const minDate = new Date(today);
     minDate.setDate(today.getDate() - 30);
     const maxDate = new Date(today);
     maxDate.setDate(today.getDate() + 30);
-    
+
     return {
       min: minDate.toISOString().split('T')[0],
-      max: maxDate.toISOString().split('T')[0]
+      max: maxDate.toISOString().split('T')[0],
     };
   };
 
-  // Função para validar se a data está desabilitada (apenas no frontend)
   const isDateDisabled = (dateStr: string): boolean => {
     if (!userSettings) return false;
     return !isDateAllowed(dateStr);
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -294,15 +305,20 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           </button>
         )}
       </div>
-      
-      {/* Indicador do usuário */}
+
+      {}
       <div className="bg-blue-900/30 border border-blue-700 rounded-md p-3 mb-6">
         <p className="text-blue-300 text-sm">
           <span className="font-semibold">👤 Registrando para:</span> {userName || 'Usuário'}
         </p>
         {userSettings && (
           <p className="text-xs text-gray-400 mt-2">
-            ⚙️ Configuração: {userSettings.workingDays === 'weekdays' ? 'Segunda a Sexta' : userSettings.workingDays === 'weekends' ? 'Finais de Semana' : 'Todos os dias'}
+            ⚙️ Configuração:{' '}
+            {userSettings.workingDays === 'weekdays'
+              ? 'Segunda a Sexta'
+              : userSettings.workingDays === 'weekends'
+                ? 'Finais de Semana'
+                : 'Todos os dias'}
             {userSettings.defaultStartTime && userSettings.defaultEndTime && (
               <span className="ml-2">
                 | 🕐 {userSettings.defaultStartTime} - {userSettings.defaultEndTime}
@@ -311,10 +327,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           </p>
         )}
       </div>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Modo de Registro */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {}
         <div className="bg-gray-700 rounded-md p-4 mb-4 border border-gray-600">
           <p className="text-sm font-medium text-gray-300 mb-3">Modo de Registro:</p>
           <div className="flex space-x-4">
@@ -340,14 +355,17 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         </div>
 
         {!isMultipleMode ? (
-          // Modo único
           <>
             <div>
               <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
                 Data
                 {userSettings && userSettings.workingDays !== 'all' && (
                   <span className="ml-2 text-xs text-yellow-400">
-                    ({userSettings.workingDays === 'weekdays' ? 'Segunda a Sexta' : 'Finais de Semana'})
+                    (
+                    {userSettings.workingDays === 'weekdays'
+                      ? 'Segunda a Sexta'
+                      : 'Finais de Semana'}
+                    )
                   </span>
                 )}
               </label>
@@ -358,21 +376,20 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                 onChange={(e) => {
                   const newDate = e.target.value;
                   handleInputChange('date', newDate);
-                  
-                  // Validar imediatamente se a data é permitida
+
                   if (newDate && !isDateAllowed(newDate)) {
-                    const workingDaysText = userSettings?.workingDays === 'weekdays' 
-                      ? 'dias de semana (Segunda a Sexta)' 
-                      : userSettings?.workingDays === 'weekends' 
-                      ? 'finais de semana (Sábado e Domingo)' 
-                      : 'todos os dias';
-                    setErrors(prev => ({ 
-                      ...prev, 
-                      date: `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}` 
+                    const workingDaysText =
+                      userSettings?.workingDays === 'weekdays'
+                        ? 'dias de semana (Segunda a Sexta)'
+                        : userSettings?.workingDays === 'weekends'
+                          ? 'finais de semana (Sábado e Domingo)'
+                          : 'todos os dias';
+                    setErrors((prev) => ({
+                      ...prev,
+                      date: `Data não permitida. Você configurou para trabalhar apenas em ${workingDaysText}`,
                     }));
                   } else {
-                    // Limpar erro se a data for válida
-                    setErrors(prev => {
+                    setErrors((prev) => {
                       const newErrors = { ...prev };
                       delete newErrors.date;
                       return newErrors;
@@ -381,16 +398,24 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                 }}
                 {...getDateRestrictions()}
                 className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                  errors.date ? 'border-red-500' : isDateDisabled(formData.date) ? 'border-yellow-500' : 'border-gray-600'
+                  errors.date
+                    ? 'border-red-500'
+                    : isDateDisabled(formData.date)
+                      ? 'border-yellow-500'
+                      : 'border-gray-600'
                 }`}
               />
               {formData.date && (
-                <p className={`text-sm mt-1 ${
-                  isDateDisabled(formData.date) ? 'text-yellow-400' : 'text-blue-300'
-                }`}>
+                <p
+                  className={`text-sm mt-1 ${
+                    isDateDisabled(formData.date) ? 'text-yellow-400' : 'text-blue-300'
+                  }`}
+                >
                   📅 {getWeekdayName(formData.date)}
                   {isDateDisabled(formData.date) && (
-                    <span className="ml-2 text-yellow-400">⚠️ Dia não configurado para trabalho</span>
+                    <span className="ml-2 text-yellow-400">
+                      ⚠️ Dia não configurado para trabalho
+                    </span>
                   )}
                 </p>
               )}
@@ -426,7 +451,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                     errors.startTime ? 'border-red-500' : 'border-gray-600'
                   }`}
                 />
-                {errors.startTime && <p className="text-red-400 text-sm mt-1">{errors.startTime}</p>}
+                {errors.startTime && (
+                  <p className="text-red-400 text-sm mt-1">{errors.startTime}</p>
+                )}
               </div>
 
               <div>
@@ -446,23 +473,23 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               </div>
             </div>
 
-            {formData.startTime && formData.endTime && timeUtils.isValidTimeRange(formData.startTime, formData.endTime) && (
-              <div className="bg-blue-900/50 border border-blue-700 rounded-md p-3">
-                <p className="text-blue-300 text-sm">
-                  <strong>Horas calculadas:</strong> {timeUtils.formatHours(
-                    timeUtils.calculateHoursDifference(formData.startTime, formData.endTime)
-                  )}
-                </p>
-              </div>
-            )}
+            {formData.startTime &&
+              formData.endTime &&
+              timeUtils.isValidTimeRange(formData.startTime, formData.endTime) && (
+                <div className="bg-blue-900/50 border border-blue-700 rounded-md p-3">
+                  <p className="text-blue-300 text-sm">
+                    <strong>Horas calculadas:</strong>{' '}
+                    {timeUtils.formatHours(
+                      timeUtils.calculateHoursDifference(formData.startTime, formData.endTime)
+                    )}
+                  </p>
+                </div>
+              )}
           </>
         ) : (
-          // Modo múltiplo
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-300">
-                Registro Múltiplo
-              </label>
+              <label className="block text-sm font-medium text-gray-300">Registro Múltiplo</label>
               <button
                 type="button"
                 onClick={() => {
@@ -470,9 +497,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                     date: timeUtils.getCurrentDate(),
                     startTime: userSettings?.defaultStartTime || '',
                     endTime: userSettings?.defaultEndTime || '',
-                    type: 'work' as 'work' | 'time_off'
+                    type: 'work' as 'work' | 'time_off',
                   };
-                  setMultipleDays(prev => [...prev, newDay]);
+                  setMultipleDays((prev) => [...prev, newDay]);
                 }}
                 className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               >
@@ -506,13 +533,17 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                           }}
                           {...getDateRestrictions()}
                           className={`w-full px-2 py-1 text-sm bg-gray-600 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white ${
-                            day.date && isDateDisabled(day.date) ? 'border-yellow-500' : 'border-gray-500'
+                            day.date && isDateDisabled(day.date)
+                              ? 'border-yellow-500'
+                              : 'border-gray-500'
                           }`}
                         />
                         {day.date && (
-                          <p className={`text-xs mt-1 ${
-                            isDateDisabled(day.date) ? 'text-yellow-400' : 'text-blue-300'
-                          }`}>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isDateDisabled(day.date) ? 'text-yellow-400' : 'text-blue-300'
+                            }`}
+                          >
                             {getWeekdayName(day.date)}
                             {isDateDisabled(day.date) && (
                               <span className="block text-yellow-400">⚠️ Não permitido</span>
@@ -536,9 +567,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-300 mb-1">
-                          Fim
-                        </label>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Fim</label>
                         <input
                           type="time"
                           value={day.endTime}
@@ -575,11 +604,16 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                         </button>
                       </div>
                     </div>
-                    {day.startTime && day.endTime && timeUtils.isValidTimeRange(day.startTime, day.endTime) && (
-                      <div className="mt-2 text-xs text-blue-300">
-                        💡 {timeUtils.formatHours(timeUtils.calculateHoursDifference(day.startTime, day.endTime))}
-                      </div>
-                    )}
+                    {day.startTime &&
+                      day.endTime &&
+                      timeUtils.isValidTimeRange(day.startTime, day.endTime) && (
+                        <div className="mt-2 text-xs text-blue-300">
+                          💡{' '}
+                          {timeUtils.formatHours(
+                            timeUtils.calculateHoursDifference(day.startTime, day.endTime)
+                          )}
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
@@ -602,16 +636,15 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
-          {isSubmitting 
-            ? 'Salvando...' 
-            : isMultipleMode 
-            ? `Registrar ${multipleDays.length} Dia${multipleDays.length !== 1 ? 's' : ''}`
-            : 'Registrar Horas'
-          }
+          {isSubmitting
+            ? 'Salvando...'
+            : isMultipleMode
+              ? `Registrar ${multipleDays.length} Dia${multipleDays.length !== 1 ? 's' : ''}`
+              : 'Registrar Horas'}
         </button>
       </form>
 
-      {/* Modal de Configurações */}
+      {}
       {userId && (
         <UserSettingsModal
           isOpen={isSettingsModalOpen}

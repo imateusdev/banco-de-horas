@@ -5,6 +5,7 @@ Sistema de controle e gestão de banco de horas com autenticação Google.
 ## 🚀 Funcionalidades
 
 ### Para Colaboradores
+
 - Autenticação via Google
 - Dashboard com estatísticas em tempo real
 - Registro de horas trabalhadas e folgas
@@ -13,6 +14,7 @@ Sistema de controle e gestão de banco de horas com autenticação Google.
 - Histórico completo de registros
 
 ### Para Administradores
+
 - Gerenciamento de usuários
 - Visualização de dashboards de qualquer usuário
 - Controle de permissões (admin/colaborador)
@@ -47,6 +49,7 @@ Acesse http://localhost:3000
 ## 💡 Como Usar
 
 ### Colaborador
+
 1. Faça login com sua conta Google
 2. Configure sua meta mensal de horas
 3. Registre suas horas trabalhadas diariamente
@@ -54,6 +57,7 @@ Acesse http://localhost:3000
 5. Converta horas extras quando necessário
 
 ### Administrador
+
 1. Acesse "Gerenciar Usuários"
 2. Adicione emails autorizados
 3. Promova usuários a admin quando necessário

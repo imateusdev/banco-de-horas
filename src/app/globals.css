@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -27,12 +27,12 @@ body {
 
 /* Adiciona cursor pointer para elementos clicáveis */
 button,
-[role="button"],
-[type="button"],
-[type="submit"],
-[type="reset"],
-input[type="checkbox"],
-input[type="radio"],
+[role='button'],
+[type='button'],
+[type='submit'],
+[type='reset'],
+input[type='checkbox'],
+input[type='radio'],
 select,
 .clickable,
 a[href] {
@@ -41,9 +41,9 @@ a[href] {
 
 /* Remove cursor pointer quando desabilitado */
 button:disabled,
-[type="button"]:disabled,
-[type="submit"]:disabled,
-[type="reset"]:disabled,
+[type='button']:disabled,
+[type='submit']:disabled,
+[type='reset']:disabled,
 select:disabled,
 input:disabled {
   cursor: not-allowed;

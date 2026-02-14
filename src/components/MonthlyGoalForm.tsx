@@ -20,7 +20,6 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
       if (!userId) return;
 
       try {
-        // Carrega a meta existente para o mês selecionado
         const existingGoal = await apiClient.getMonthlyGoal(userId, month);
         setHoursGoal(existingGoal > 0 ? existingGoal.toString() : '');
       } catch (error) {
@@ -34,15 +33,15 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const goalValue = parseFloat(hoursGoal);
-    
+
     if (isNaN(goalValue) || goalValue <= 0) {
       setError('Meta deve ser um número positivo');
       return;
     }
-    
-    if (goalValue > 744) { // 31 dias * 24 horas
+
+    if (goalValue > 744) {
       setError('Meta muito alta para um mês');
       return;
     }
@@ -69,22 +68,31 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
   const formatMonthDisplay = (monthStr: string): string => {
     const [year, month] = monthStr.split('-');
     const monthNames = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      'Janeiro',
+      'Fevereiro',
+      'Março',
+      'Abril',
+      'Maio',
+      'Junho',
+      'Julho',
+      'Agosto',
+      'Setembro',
+      'Outubro',
+      'Novembro',
+      'Dezembro',
     ];
-    
+
     return `${monthNames[parseInt(month) - 1]} ${year}`;
   };
 
   const getSuggestedHours = (): string[] => {
-    // Sugestões baseadas em horas de trabalho comuns
-    return ['160', '176', '200', '220']; // 20h/semana, 22h/semana, 25h/semana, 27.5h/semana
+    return ['160', '176', '200', '220'];
   };
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
       <h2 className="text-2xl font-bold text-white mb-6">Configurar Meta Mensal</h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="month" className="block text-sm font-medium text-gray-300 mb-2">
@@ -98,7 +106,8 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
             className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
           />
           <p className="text-sm text-gray-400 mt-1">
-            Configurando meta para: <strong className="text-white">{formatMonthDisplay(month)}</strong>
+            Configurando meta para:{' '}
+            <strong className="text-white">{formatMonthDisplay(month)}</strong>
           </p>
         </div>
 

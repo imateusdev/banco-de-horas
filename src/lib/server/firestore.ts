@@ -2,7 +2,6 @@ import { adminDb } from '@/lib/firebase/admin';
 import { TimeRecord, MonthlyGoal, User, HourConversion, UserSettings } from '@/types';
 import { Timestamp } from 'firebase-admin/firestore';
 
-// Time Records
 export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]> {
   try {
     const snapshot = await adminDb
@@ -27,7 +26,6 @@ export async function getTimeRecordsByUser(userId: string): Promise<TimeRecord[]
       };
     });
   } catch (error: any) {
-    // Se a coleção não existir, retornar array vazio
     if (error?.code === 5 || error?.message?.includes('does not exist')) {
       console.warn('⚠️ Firestore collection not found, returning empty array');
       return [];
@@ -41,7 +39,7 @@ export async function getAllTimeRecords(): Promise<TimeRecord[]> {
     .collection('timeRecords')
     .orderBy('date', 'desc')
     .orderBy('createdAt', 'desc')
-    .limit(1000) // Limitar para evitar problemas de performance
+    .limit(1000)
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -61,19 +59,26 @@ export async function getAllTimeRecords(): Promise<TimeRecord[]> {
 }
 
 export async function createTimeRecord(record: TimeRecord): Promise<void> {
-  await adminDb.collection('timeRecords').doc(record.id).set({
-    userId: record.userId,
-    name: record.name,
-    date: Timestamp.fromDate(new Date(record.date)),
-    type: record.type,
-    startTime: record.startTime,
-    endTime: record.endTime,
-    totalHours: record.totalHours,
-    createdAt: Timestamp.fromDate(new Date(record.createdAt)),
-  });
+  await adminDb
+    .collection('timeRecords')
+    .doc(record.id)
+    .set({
+      userId: record.userId,
+      name: record.name,
+      date: Timestamp.fromDate(new Date(record.date)),
+      type: record.type,
+      startTime: record.startTime,
+      endTime: record.endTime,
+      totalHours: record.totalHours,
+      createdAt: Timestamp.fromDate(new Date(record.createdAt)),
+    });
 }
 
-export async function updateTimeRecord(id: string, userId: string, updates: Partial<TimeRecord>): Promise<void> {
+export async function updateTimeRecord(
+  id: string,
+  userId: string,
+  updates: Partial<TimeRecord>
+): Promise<void> {
   const recordRef = adminDb.collection('timeRecords').doc(id);
   const doc = await recordRef.get();
 
@@ -103,7 +108,6 @@ export async function deleteTimeRecord(id: string, userId: string): Promise<void
   await recordRef.delete();
 }
 
-// Users
 export async function getUser(userId: string): Promise<User | null> {
   const doc = await adminDb.collection('users').doc(userId).get();
 
@@ -143,15 +147,17 @@ export async function createUser(userId: string, user: User): Promise<void> {
     .replace(/[^a-z0-9]/g, '')
     .slice(0, 20);
 
-  await adminDb.collection('users').doc(userId).set({
-    name: user.name,
-    slug,
-    email: (await import('@/lib/firebase/admin')).adminAuth.getUser(userId).then(u => u.email),
-    createdAt: Timestamp.fromDate(new Date(user.createdAt)),
-  });
+  await adminDb
+    .collection('users')
+    .doc(userId)
+    .set({
+      name: user.name,
+      slug,
+      email: (await import('@/lib/firebase/admin')).adminAuth.getUser(userId).then((u) => u.email),
+      createdAt: Timestamp.fromDate(new Date(user.createdAt)),
+    });
 }
 
-// User Settings
 export async function getUserSettings(userId: string): Promise<UserSettings | null> {
   const doc = await adminDb.collection('userSettings').doc(userId).get();
 
@@ -195,7 +201,6 @@ export async function createOrUpdateUserSettings(
   }
 }
 
-// Monthly Goals
 export async function getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]> {
   const snapshot = await adminDb
     .collection('monthlyGoals')
@@ -216,12 +221,18 @@ export async function getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]
 }
 
 export async function saveMonthlyGoal(goal: MonthlyGoal): Promise<void> {
-  await adminDb.collection('monthlyGoals').doc(goal.id).set({
-    userId: goal.userId,
-    month: goal.month,
-    hoursGoal: goal.hoursGoal,
-    createdAt: Timestamp.fromDate(new Date(goal.createdAt)),
-  }, { merge: true });
+  await adminDb
+    .collection('monthlyGoals')
+    .doc(goal.id)
+    .set(
+      {
+        userId: goal.userId,
+        month: goal.month,
+        hoursGoal: goal.hoursGoal,
+        createdAt: Timestamp.fromDate(new Date(goal.createdAt)),
+      },
+      { merge: true }
+    );
 }
 
 export async function getUserMonthlyGoal(userId: string, month: string): Promise<number> {
@@ -237,7 +248,6 @@ export async function getUserMonthlyGoal(userId: string, month: string): Promise
   return snapshot.docs[0].data().hoursGoal || 0;
 }
 
-// Hour Conversions
 export async function getUserHourConversions(userId: string): Promise<HourConversion[]> {
   const snapshot = await adminDb
     .collection('hourConversions')
@@ -261,17 +271,19 @@ export async function getUserHourConversions(userId: string): Promise<HourConver
 }
 
 export async function createHourConversion(conversion: HourConversion): Promise<void> {
-  await adminDb.collection('hourConversions').doc(conversion.id).set({
-    userId: conversion.userId,
-    hours: conversion.hours,
-    amount: conversion.amount,
-    type: conversion.type,
-    date: Timestamp.fromDate(new Date(conversion.date)),
-    createdAt: Timestamp.fromDate(new Date(conversion.createdAt)),
-  });
+  await adminDb
+    .collection('hourConversions')
+    .doc(conversion.id)
+    .set({
+      userId: conversion.userId,
+      hours: conversion.hours,
+      amount: conversion.amount,
+      type: conversion.type,
+      date: Timestamp.fromDate(new Date(conversion.date)),
+      createdAt: Timestamp.fromDate(new Date(conversion.createdAt)),
+    });
 }
 
-// Pre-authorized Emails
 export interface PreAuthorizedEmail {
   email: string;
   role: 'admin' | 'collaborator';
@@ -296,7 +308,6 @@ export async function getPreAuthorizedEmails(): Promise<PreAuthorizedEmail[]> {
       };
     });
   } catch (error: any) {
-    // Se a coleção não existe ainda, retornar array vazio
     if (error?.code === 5 || error?.message?.includes('does not exist')) {
       console.warn('⚠️ Firestore collection not found, returning empty array');
       return [];
@@ -321,7 +332,6 @@ export async function getPreAuthorizedEmail(email: string): Promise<PreAuthorize
       addedAt: data.addedAt.toDate().toISOString(),
     };
   } catch (error: any) {
-    // Se a coleção não existe ainda, retornar null
     if (error?.code === 5 || error?.message?.includes('does not exist')) {
       console.warn('⚠️ Firestore collection not found, returning null');
       return null;

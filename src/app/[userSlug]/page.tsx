@@ -14,9 +14,11 @@ export default function UserDashboard() {
   const params = useParams();
   const router = useRouter();
   const userSlug = params.userSlug as string;
-  
+
   const [user, setUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'register' | 'goal' | 'conversion' | 'history'>('dashboard');
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'register' | 'goal' | 'conversion' | 'history'
+  >('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -24,20 +26,19 @@ export default function UserDashboard() {
     const loadUser = async () => {
       const foundUser = await clientStorageUtils.getUserBySlug(userSlug);
       if (!foundUser) {
-        // Usuário não encontrado, redirecionar para home
         router.push('/');
         return;
       }
-      
+
       setUser(foundUser);
       setLoading(false);
     };
-    
+
     loadUser();
   }, [userSlug, router]);
 
   const triggerRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const handleBackToUsers = () => {
@@ -66,7 +67,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
+      {}
       <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -76,17 +77,13 @@ export default function UserDashboard() {
             >
               ← Voltar
             </button>
-            
-            <h1 className="text-2xl font-bold text-white text-center flex-1">
-              👤 {user.name}
-            </h1>
-            
-            <div className="w-16"></div> {/* Spacer para balanceamento */}
+            <h1 className="text-2xl font-bold text-white text-center flex-1">👤 {user.name}</h1>
+            <div className="w-16"></div> {}
           </div>
         </div>
       </header>
 
-      {/* Navigation Tabs */}
+      {}
       <nav className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
@@ -108,51 +105,48 @@ export default function UserDashboard() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard 
-            refreshTrigger={refreshTrigger} 
-            userId={user.id}
-          />
+          <StatsDashboard refreshTrigger={refreshTrigger} userId={user.id} />
         )}
-        
+
         {activeTab === 'register' && (
-          <TimeRecordForm 
+          <TimeRecordForm
             userId={user.id}
             userName={user.name}
             onRecordAdded={() => {
               triggerRefresh();
               setActiveTab('dashboard');
-            }} 
+            }}
           />
         )}
-        
+
         {activeTab === 'goal' && (
-          <MonthlyGoalForm 
+          <MonthlyGoalForm
             userId={user.id}
             onGoalUpdated={() => {
               triggerRefresh();
               setActiveTab('dashboard');
-            }} 
+            }}
           />
         )}
-        
+
         {activeTab === 'conversion' && (
-          <HourConversionForm 
+          <HourConversionForm
             userId={user.id}
             userName={user.name}
             onConversionAdded={() => {
               triggerRefresh();
               setActiveTab('dashboard');
-            }} 
+            }}
           />
         )}
-        
+
         {activeTab === 'history' && (
-          <TimeRecordsList 
+          <TimeRecordsList
             userId={user.id}
-            refreshTrigger={refreshTrigger} 
+            refreshTrigger={refreshTrigger}
             onRecordUpdated={triggerRefresh}
           />
         )}

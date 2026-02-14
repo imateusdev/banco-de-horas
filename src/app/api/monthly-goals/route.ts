@@ -1,5 +1,10 @@
 import { NextRequest } from 'next/server';
-import { getUserFromRequest, canAccessUserData, unauthorized, badRequest, serverError } from '@/lib/server/auth';
+import {
+  getUserFromRequest,
+  canAccessUserData,
+  unauthorized,
+  serverError,
+} from '@/lib/server/auth';
 import { getUserMonthlyGoals, getUserMonthlyGoal, saveMonthlyGoal } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
@@ -11,9 +16,11 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get('month');
     const targetUserId = searchParams.get('userId') || user.uid;
 
-    // Check if user can access this data
     if (!canAccessUserData(user, targetUserId)) {
-      return Response.json({ error: 'Forbidden - You can only access your own monthly goals' }, { status: 403 });
+      return Response.json(
+        { error: 'Forbidden - You can only access your own monthly goals' },
+        { status: 403 }
+      );
     }
 
     if (month) {
@@ -36,9 +43,11 @@ export async function POST(request: NextRequest) {
 
     const goal = await request.json();
 
-    // Check if user can create this goal
     if (!canAccessUserData(user, goal.userId)) {
-      return Response.json({ error: 'Forbidden - You can only create your own monthly goals' }, { status: 403 });
+      return Response.json(
+        { error: 'Forbidden - You can only create your own monthly goals' },
+        { status: 403 }
+      );
     }
 
     await saveMonthlyGoal(goal);

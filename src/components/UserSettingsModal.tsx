@@ -15,7 +15,12 @@ interface UserSettings {
   workingDays: 'weekdays' | 'all' | 'weekends';
 }
 
-export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsUpdated }: UserSettingsModalProps) {
+export default function UserSettingsModal({
+  isOpen,
+  onClose,
+  userId,
+  onSettingsUpdated,
+}: UserSettingsModalProps) {
   const [settings, setSettings] = useState<UserSettings>({
     defaultStartTime: null,
     defaultEndTime: null,
@@ -57,7 +62,7 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
   const handleSave = async () => {
     setIsSaving(true);
     setError('');
-    
+
     try {
       const response = await fetch('/api/user-settings', {
         method: 'POST',
@@ -86,7 +91,7 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
   };
 
   const handleInputChange = (field: keyof UserSettings, value: string | null) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
+    setSettings((prev) => ({ ...prev, [field]: value }));
     setError('');
   };
 
@@ -125,26 +130,24 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Horários Padrão */}
+              {}
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4">🕐 Horários Padrão</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Entrada
-                    </label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Entrada</label>
                     <input
                       type="time"
                       value={settings.defaultStartTime || ''}
-                      onChange={(e) => handleInputChange('defaultStartTime', e.target.value || null)}
+                      onChange={(e) =>
+                        handleInputChange('defaultStartTime', e.target.value || null)
+                      }
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
                       placeholder="09:00"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Saída
-                    </label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Saída</label>
                     <input
                       type="time"
                       value={settings.defaultEndTime || ''}
@@ -159,7 +162,7 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
                 </p>
               </div>
 
-              {/* Dias de Trabalho */}
+              {}
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4">📅 Dias de Trabalho</h3>
                 <div className="space-y-2">
@@ -169,7 +172,12 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
                         type="radio"
                         value={option}
                         checked={settings.workingDays === option}
-                        onChange={(e) => handleInputChange('workingDays', e.target.value as UserSettings['workingDays'])}
+                        onChange={(e) =>
+                          handleInputChange(
+                            'workingDays',
+                            e.target.value as UserSettings['workingDays']
+                          )
+                        }
                         className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
                       />
                       <span className="text-gray-300">{getWorkingDaysLabel(option)}</span>
@@ -187,7 +195,7 @@ export default function UserSettingsModal({ isOpen, onClose, userId, onSettingsU
                 </div>
               )}
 
-              {/* Ações */}
+              {}
               <div className="flex space-x-3">
                 <button
                   onClick={handleSave}

@@ -1,5 +1,4 @@
-import { TimeRecord, MonthlyStats, DailyStats, HourConversion, MonthlyGoal } from '@/types';
-import { timeUtils } from './calculations';
+import { TimeRecord, MonthlyStats, DailyStats, HourConversion } from '@/types';
 import { auth } from './firebase/config';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
@@ -11,12 +10,11 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   const token = await user.getIdToken();
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   };
 }
 
 export const apiClient = {
-  // Time Records
   async getTimeRecords(userId: string): Promise<TimeRecord[]> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/time-records?userId=${userId}`, { headers });
@@ -53,7 +51,6 @@ export const apiClient = {
     if (!response.ok) throw new Error('Failed to delete time record');
   },
 
-  // Hour Conversions
   async getHourConversions(userId: string): Promise<HourConversion[]> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/hour-conversions?userId=${userId}`, { headers });
@@ -71,11 +68,10 @@ export const apiClient = {
     if (!response.ok) throw new Error('Failed to create hour conversion');
   },
 
-  // Monthly Goals
   async getMonthlyGoal(userId: string, month: string): Promise<number> {
     const headers = await getAuthHeaders();
     const response = await fetch(`/api/monthly-goals?userId=${userId}&month=${month}`, { headers });
-    if (!response.ok) return 0; // Default goal if not found
+    if (!response.ok) return 0;
     const data = await response.json();
     return data.goal || 0;
   },
@@ -90,10 +86,9 @@ export const apiClient = {
     if (!response.ok) throw new Error('Failed to save monthly goal');
   },
 
-  // Stats Calculations
   async getDailyStats(date: string, userId: string): Promise<DailyStats> {
     const records = await this.getTimeRecords(userId);
-    const dayRecords = records.filter(record => record.date === date);
+    const dayRecords = records.filter((record) => record.date === date);
     const totalHours = dayRecords.reduce((sum, record) => sum + record.totalHours, 0);
 
     return {
@@ -104,30 +99,26 @@ export const apiClient = {
   },
 
   async getMonthlyStats(month: string, userId: string): Promise<MonthlyStats> {
-    const [records, conversions, goal] = await Promise.all([
+    const [records, , goal] = await Promise.all([
       this.getTimeRecords(userId),
       this.getHourConversions(userId),
       this.getMonthlyGoal(userId, month),
     ]);
 
-    const monthRecords = records.filter(record => record.date.startsWith(month));
+    const monthRecords = records.filter((record) => record.date.startsWith(month));
 
-    // Separar registros de trabalho e folga
-    const workRecords = monthRecords.filter(record => record.type === 'work');
-    const timeOffRecords = monthRecords.filter(record => record.type === 'time_off');
+    const workRecords = monthRecords.filter((record) => record.type === 'work');
+    const timeOffRecords = monthRecords.filter((record) => record.type === 'time_off');
 
-    // Calcular horas de trabalho e folga
     const workHours = workRecords.reduce((sum, record) => sum + record.totalHours, 0);
     const timeOffHours = timeOffRecords.reduce((sum, record) => sum + record.totalHours, 0);
 
-    // Total é horas de trabalho - horas de folga
     const totalHours = workHours - timeOffHours;
 
     const difference = totalHours - goal;
     const isOverGoal = difference > 0;
 
-    // Conta dias únicos trabalhados no mês
-    const uniqueDates = [...new Set(monthRecords.map(record => record.date))];
+    const uniqueDates = [...new Set(monthRecords.map((record) => record.date))];
     const workingDays = uniqueDates.length;
 
     return {
@@ -145,26 +136,25 @@ export const apiClient = {
       this.getHourConversions(userId),
     ]);
 
-    // Calcula total de horas trabalhadas (trabalho - folga)
     const workHours = records
-      .filter(r => r.type === 'work')
+      .filter((r) => r.type === 'work')
       .reduce((sum, r) => sum + r.totalHours, 0);
 
     const timeOffHours = records
-      .filter(r => r.type === 'time_off')
+      .filter((r) => r.type === 'time_off')
       .reduce((sum, r) => sum + r.totalHours, 0);
 
     const totalWorkedHours = workHours - timeOffHours;
 
-    // Subtrai conversões de horas
-    const convertedHours = conversions
-      .reduce((sum, c) => sum + c.hours, 0);
+    const convertedHours = conversions.reduce((sum, c) => sum + c.hours, 0);
 
     return totalWorkedHours - convertedHours;
   },
 
-  // Dashboard - Busca todos os dados em 1 requisição
-  async getDashboardData(date: string, month: string): Promise<{
+  async getDashboardData(
+    date: string,
+    month: string
+  ): Promise<{
     dailyStats: DailyStats;
     monthlyStats: MonthlyStats;
     accumulatedHours: any;

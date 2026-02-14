@@ -12,14 +12,15 @@ import HourConversionForm from '@/components/HourConversionForm';
 export default function Dashboard() {
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'register' | 'goal' | 'conversion' | 'history'>('dashboard');
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'register' | 'goal' | 'conversion' | 'history'
+  >('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const triggerRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
-  // Loading state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -28,7 +29,6 @@ export default function Dashboard() {
     );
   }
 
-  // Not authenticated - redirect to home
   if (!user) {
     router.push('/');
     return null;
@@ -44,18 +44,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
+      {}
       <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold text-white">
-              ⏰ Banco de Horas
-            </h1>
+            <h1 className="text-2xl font-bold text-white">⏰ Banco de Horas</h1>
 
             <div className="flex items-center space-x-4">
-              <span className="text-gray-300">
-                👤 {user.displayName || user.email}
-              </span>
+              <span className="text-gray-300">👤 {user.displayName || user.email}</span>
               {isAdmin && (
                 <button
                   onClick={() => router.push('/admin/users')}
@@ -75,7 +71,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
+      {}
       <nav className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
@@ -97,13 +93,10 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard
-            refreshTrigger={refreshTrigger}
-            userId={user.uid}
-          />
+          <StatsDashboard refreshTrigger={refreshTrigger} userId={user.uid} />
         )}
 
         {activeTab === 'register' && (

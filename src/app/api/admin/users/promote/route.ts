@@ -1,5 +1,11 @@
 import { NextRequest } from 'next/server';
-import { getUserFromRequest, isAdmin, unauthorized, badRequest, serverError } from '@/lib/server/auth';
+import {
+  getUserFromRequest,
+  isAdmin,
+  unauthorized,
+  badRequest,
+  serverError,
+} from '@/lib/server/auth';
 import { adminAuth } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
@@ -16,25 +22,21 @@ export async function POST(request: NextRequest) {
       return badRequest('Email is required');
     }
 
-    // Buscar usuário pelo email
     let targetUser;
     try {
       targetUser = await adminAuth.getUserByEmail(email);
-    } catch (error) {
+    } catch {
       return Response.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // Verificar se está autorizado
     if (!targetUser.customClaims?.authorized) {
       return Response.json({ error: 'Usuário não está autorizado' }, { status: 400 });
     }
 
-    // Verificar se já é admin
     if (targetUser.customClaims.role === 'admin') {
       return Response.json({ error: 'Usuário já é administrador' }, { status: 400 });
     }
 
-    // Promover para admin
     await adminAuth.setCustomUserClaims(targetUser.uid, {
       ...targetUser.customClaims,
       role: 'admin',

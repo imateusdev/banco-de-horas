@@ -10,7 +10,10 @@ interface AccumulatedHoursSectionProps {
   refreshTrigger?: number;
 }
 
-export default function AccumulatedHoursSection({ userId, refreshTrigger }: AccumulatedHoursSectionProps) {
+export default function AccumulatedHoursSection({
+  userId,
+  refreshTrigger,
+}: AccumulatedHoursSectionProps) {
   const [accumulatedHours, setAccumulatedHours] = useState<AccumulatedHours | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,11 +29,11 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
         ]);
 
         const convertedToMoney = conversions
-          .filter(c => c.type === 'money')
+          .filter((c) => c.type === 'money')
           .reduce((sum, c) => sum + c.hours, 0);
 
         const usedForTimeOff = conversions
-          .filter(c => c.type === 'time_off')
+          .filter((c) => c.type === 'time_off')
           .reduce((sum, c) => sum + c.hours, 0);
 
         const totalExtraHours = totalHours + convertedToMoney + usedForTimeOff;
@@ -76,9 +79,9 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
       <h2 className="text-2xl font-bold text-white mb-6">💰 Banco de Horas Extras Acumuladas</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Acumulado */}
+        {}
         <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-center">
           <div className="text-3xl font-bold text-green-400 mb-2">
             {timeUtils.formatHours(accumulatedHours.totalExtraHours)}
@@ -87,7 +90,7 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
           <p className="text-xs text-green-200 mt-1">Soma de todos os meses</p>
         </div>
 
-        {/* Disponível */}
+        {}
         <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4 text-center">
           <div className="text-3xl font-bold text-blue-400 mb-2">
             {timeUtils.formatHours(accumulatedHours.availableHours)}
@@ -96,7 +99,7 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
           <p className="text-xs text-blue-200 mt-1">Para converter ou usar</p>
         </div>
 
-        {/* Convertido em Dinheiro */}
+        {}
         <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 text-center">
           <div className="text-3xl font-bold text-yellow-400 mb-2">
             {timeUtils.formatHours(accumulatedHours.convertedToMoney)}
@@ -105,7 +108,7 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
           <p className="text-xs text-yellow-200 mt-1">Já recebido</p>
         </div>
 
-        {/* Usado em Folgas */}
+        {}
         <div className="bg-purple-900/30 border border-purple-700 rounded-lg p-4 text-center">
           <div className="text-3xl font-bold text-purple-400 mb-2">
             {timeUtils.formatHours(accumulatedHours.usedForTimeOff)}
@@ -115,26 +118,32 @@ export default function AccumulatedHoursSection({ userId, refreshTrigger }: Accu
         </div>
       </div>
 
-      {/* Resumo */}
+      {}
       <div className="mt-6 p-4 bg-gray-700 border border-gray-600 rounded-md">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="mb-2 sm:mb-0">
             <p className="text-white font-medium">
-              📈 Saldo de Horas Extras: <span className="text-green-400">{timeUtils.formatHours(accumulatedHours.availableHours)}</span>
+              📈 Saldo de Horas Extras:{' '}
+              <span className="text-green-400">
+                {timeUtils.formatHours(accumulatedHours.availableHours)}
+              </span>
             </p>
             <p className="text-gray-400 text-sm">
-              {accumulatedHours.availableHours > 0 
+              {accumulatedHours.availableHours > 0
                 ? 'Você pode converter essas horas em dinheiro ou reservar para folgas.'
-                : 'Continue trabalhando para acumular mais horas extras!'
-              }
+                : 'Continue trabalhando para acumular mais horas extras!'}
             </p>
           </div>
-          
+
           {accumulatedHours.totalExtraHours > 0 && (
             <div className="text-right">
               <p className="text-sm text-gray-400">Percentual disponível:</p>
               <p className="text-lg font-bold text-blue-400">
-                {((accumulatedHours.availableHours / accumulatedHours.totalExtraHours) * 100).toFixed(1)}%
+                {(
+                  (accumulatedHours.availableHours / accumulatedHours.totalExtraHours) *
+                  100
+                ).toFixed(1)}
+                %
               </p>
             </div>
           )}

@@ -6,7 +6,8 @@
     "dev": "bun --bun next dev --turbo",
     "build": "bun --bun next build",
     "start": "bun --bun next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "docker:build": "docker build -t banco-de-horas .",
     "docker:run": "docker run -p 3000:3000 banco-de-horas",
     "authorize": "bun scripts/authorize-user.ts"
@@ -20,13 +21,14 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

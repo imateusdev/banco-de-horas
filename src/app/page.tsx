@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user, loading, signInWithGoogle } = useAuth();
@@ -19,7 +19,7 @@ export default function Home() {
   const checkAuthorizationAndRedirect = async () => {
     try {
       const token = await user!.getIdToken(true);
-      const response = await fetch("/api/auth/check", {
+      const response = await fetch('/api/auth/check', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -28,20 +28,17 @@ export default function Home() {
       const data = await response.json();
 
       if (data.authorized) {
-        // Redireciona baseado na role
-        if (data.role === "admin") {
-          router.push("/admin/users");
+        if (data.role === 'admin') {
+          router.push('/admin/users');
         } else {
-          router.push("/dashboard");
+          router.push('/dashboard');
         }
       } else {
-        setAuthError(
-          "Aguardando autorização de um administrador. Por favor, entre em contato.",
-        );
+        setAuthError('Aguardando autorização de um administrador. Por favor, entre em contato.');
       }
     } catch (error) {
-      console.error("Error checking authorization:", error);
-      setAuthError("Erro ao verificar autorização. Tente novamente.");
+      console.error('Error checking authorization:', error);
+      setAuthError('Erro ao verificar autorização. Tente novamente.');
     }
   };
 
@@ -50,10 +47,9 @@ export default function Home() {
       setIsAuthenticating(true);
       setAuthError(null);
       await signInWithGoogle();
-      // O useEffect vai lidar com o redirecionamento após login
     } catch (error: any) {
-      console.error("Error signing in:", error);
-      setAuthError(error.message || "Erro ao fazer login com Google");
+      console.error('Error signing in:', error);
+      setAuthError(error.message || 'Erro ao fazer login com Google');
     } finally {
       setIsAuthenticating(false);
     }
@@ -70,25 +66,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        {/* Card de Login */}
+        {}
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-          {/* Logo e Título */}
+          {}
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">⏰</div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Banco de Horas
-            </h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Banco de Horas</h1>
             <p className="text-gray-400">Sistema de Controle de Horas</p>
           </div>
 
-          {/* Mensagem de Erro */}
+          {}
           {authError && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
               <p className="text-red-400 text-sm text-center">{authError}</p>
             </div>
           )}
 
-          {/* Botão de Login */}
+          {}
           <button
             onClick={handleGoogleSignIn}
             disabled={isAuthenticating}
@@ -121,7 +115,7 @@ export default function Home() {
             )}
           </button>
 
-          {/* Informações */}
+          {}
           <div className="mt-8 pt-6 border-t border-gray-700">
             <p className="text-gray-400 text-sm text-center">
               Primeiro usuário a fazer login será o administrador
@@ -129,7 +123,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Footer */}
+        {}
         <div className="mt-6 text-center text-gray-500 text-sm">
           <p>Sistema seguro de controle de horas de trabalho</p>
         </div>

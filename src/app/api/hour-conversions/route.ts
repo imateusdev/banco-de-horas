@@ -1,5 +1,10 @@
 import { NextRequest } from 'next/server';
-import { getUserFromRequest, canAccessUserData, unauthorized, badRequest, serverError } from '@/lib/server/auth';
+import {
+  getUserFromRequest,
+  canAccessUserData,
+  unauthorized,
+  serverError,
+} from '@/lib/server/auth';
 import { getUserHourConversions, createHourConversion } from '@/lib/server/firestore';
 
 export async function GET(request: NextRequest) {
@@ -10,9 +15,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const targetUserId = searchParams.get('userId') || user.uid;
 
-    // Check if user can access this data
     if (!canAccessUserData(user, targetUserId)) {
-      return Response.json({ error: 'Forbidden - You can only access your own hour conversions' }, { status: 403 });
+      return Response.json(
+        { error: 'Forbidden - You can only access your own hour conversions' },
+        { status: 403 }
+      );
     }
 
     const conversions = await getUserHourConversions(targetUserId);
@@ -30,9 +37,11 @@ export async function POST(request: NextRequest) {
 
     const conversion = await request.json();
 
-    // Check if user can create this conversion
     if (!canAccessUserData(user, conversion.userId)) {
-      return Response.json({ error: 'Forbidden - You can only create your own hour conversions' }, { status: 403 });
+      return Response.json(
+        { error: 'Forbidden - You can only create your own hour conversions' },
+        { status: 403 }
+      );
     }
 
     await createHourConversion(conversion);

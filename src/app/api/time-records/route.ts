@@ -1,5 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getUserFromRequest, unauthorized, badRequest, serverError, canAccessUserData, isAdmin } from '@/lib/server/auth';
+import {
+  getUserFromRequest,
+  unauthorized,
+  badRequest,
+  serverError,
+  canAccessUserData,
+  isAdmin,
+} from '@/lib/server/auth';
 import {
   getTimeRecordsByUser,
   getAllTimeRecords,
@@ -16,16 +23,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const targetUserId = searchParams.get('userId');
 
-    // Se admin requisitou todos os registros (sem userId específico)
     if (!targetUserId && isAdmin(user)) {
       const allRecords = await getAllTimeRecords();
       return Response.json(allRecords);
     }
 
-    // Define qual userId buscar
     const userIdToFetch = targetUserId || user.uid;
 
-    // Verifica se pode acessar os dados desse usuário
     if (!canAccessUserData(user, userIdToFetch)) {
       return Response.json(
         { error: 'Forbidden - You can only access your own records' },
@@ -48,7 +52,6 @@ export async function POST(request: NextRequest) {
 
     const record = await request.json();
 
-    // Collaborators só podem criar registros para si mesmos
     if (!canAccessUserData(user, record.userId)) {
       return Response.json(
         { error: 'Forbidden - You can only create records for yourself' },
@@ -75,7 +78,6 @@ export async function PATCH(request: NextRequest) {
       return badRequest('Record ID is required');
     }
 
-    // Verifica se pode modificar registros desse usuário
     if (!canAccessUserData(user, userId)) {
       return Response.json(
         { error: 'Forbidden - You can only update your own records' },
@@ -111,7 +113,6 @@ export async function DELETE(request: NextRequest) {
       return badRequest('User ID is required');
     }
 
-    // Verifica se pode deletar registros desse usuário
     if (!canAccessUserData(user, userId)) {
       return Response.json(
         { error: 'Forbidden - You can only delete your own records' },

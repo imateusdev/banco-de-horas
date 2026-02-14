@@ -6,7 +6,6 @@ import { timeUtils } from '@/lib/calculations';
 import { User } from '@/types';
 import { useRouter } from 'next/navigation';
 
-// Componente interno para card de usuário
 function UserCard({ user, onViewUser }: { user: User; onViewUser: (user: User) => void }) {
   const [userStats, setUserStats] = useState({ totalHours: 0, recordsCount: 0 });
   const [loading, setLoading] = useState(true);
@@ -45,11 +44,9 @@ function UserCard({ user, onViewUser }: { user: User; onViewUser: (user: User) =
       <div>
         <h3 className="font-semibold text-white text-lg">{user.name}</h3>
         <p className="text-gray-400 text-sm">/{slug}</p>
-        <p className="text-gray-400 text-sm">
-          Criado em: {formatDate(user.createdAt)}
-        </p>
+        <p className="text-gray-400 text-sm">Criado em: {formatDate(user.createdAt)}</p>
       </div>
-      
+
       <div className="text-right">
         {loading ? (
           <p className="text-gray-400">Carregando...</p>
@@ -97,7 +94,7 @@ export default function UsersManager() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newUserName.trim()) {
       setError('Nome é obrigatório');
       return;
@@ -110,7 +107,7 @@ export default function UsersManager() {
 
     const slug = clientStorageUtils.generateUserSlug(newUserName);
     const existingUser = await clientStorageUtils.getUserBySlug(slug);
-    
+
     if (existingUser) {
       setError('Já existe um usuário com um nome similar');
       return;
@@ -130,7 +127,6 @@ export default function UsersManager() {
       setNewUserName('');
       await loadUsers();
 
-      // Redirecionar para o dashboard do novo usuário
       router.push(`/${slug}`);
     } catch (error) {
       console.error('Error creating user:', error);
@@ -147,10 +143,10 @@ export default function UsersManager() {
 
   return (
     <div className="space-y-6">
-      {/* Criar Novo Usuário */}
+      {}
       <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold text-white mb-6">Criar Novo Usuário</h2>
-        
+
         <form onSubmit={handleCreateUser} className="space-y-4">
           <div>
             <label htmlFor="userName" className="block text-sm font-medium text-gray-300 mb-2">
@@ -192,7 +188,7 @@ export default function UsersManager() {
         </form>
       </div>
 
-      {/* Lista de Usuários */}
+      {}
       <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
         <h2 className="text-2xl font-bold text-white mb-6">Usuários Existentes</h2>
 

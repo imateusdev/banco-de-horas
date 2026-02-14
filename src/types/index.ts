@@ -2,10 +2,10 @@ export interface TimeRecord {
   id: string;
   userId: string;
   name: string;
-  date: string; // YYYY-MM-DD format
-  type: 'work' | 'time_off'; // work = trabalho normal, time_off = folga
-  startTime: string; // HH:MM format
-  endTime: string; // HH:MM format
+  date: string;
+  type: 'work' | 'time_off';
+  startTime: string;
+  endTime: string;
   totalHours: number;
   createdAt: string;
 }
@@ -13,7 +13,7 @@ export interface TimeRecord {
 export interface MonthlyGoal {
   id: string;
   userId: string;
-  month: string; // YYYY-MM format
+  month: string;
   hoursGoal: number;
   createdAt: string;
 }
@@ -31,14 +31,14 @@ export interface HourConversion {
   userId: string;
   hours: number;
   amount: number;
-  type: 'money' | 'time_off'; // money = conversão em dinheiro, time_off = folga
+  type: 'money' | 'time_off';
   date: string;
   createdAt: string;
 }
 
 export interface AccumulatedHours {
   totalExtraHours: number;
-  availableHours: number; // total - convertidas - folgas
+  availableHours: number;
   convertedToMoney: number;
   usedForTimeOff: number;
 }

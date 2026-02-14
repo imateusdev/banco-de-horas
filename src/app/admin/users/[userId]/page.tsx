@@ -16,7 +16,6 @@ export default function UserDashboardPage() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history'>('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Buscar dados do usuário
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -35,7 +34,6 @@ export default function UserDashboardPage() {
     }
   }, [userId]);
 
-  // Loading state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -44,7 +42,6 @@ export default function UserDashboardPage() {
     );
   }
 
-  // Not authenticated or not admin
   if (!user || !isAdmin) {
     router.push('/');
     return null;
@@ -57,7 +54,7 @@ export default function UserDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
+      {}
       <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -74,15 +71,13 @@ export default function UserDashboardPage() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm">
-                Admin: {user.displayName || user.email}
-              </span>
+              <span className="text-gray-400 text-sm">Admin: {user.displayName || user.email}</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation Tabs */}
+      {}
       <nav className="bg-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
@@ -104,20 +99,17 @@ export default function UserDashboardPage() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {activeTab === 'dashboard' && (
-          <StatsDashboard
-            refreshTrigger={refreshTrigger}
-            userId={userId}
-          />
+          <StatsDashboard refreshTrigger={refreshTrigger} userId={userId} />
         )}
 
         {activeTab === 'history' && (
           <TimeRecordsList
             userId={userId}
             refreshTrigger={refreshTrigger}
-            onRecordUpdated={() => setRefreshTrigger(prev => prev + 1)}
+            onRecordUpdated={() => setRefreshTrigger((prev) => prev + 1)}
           />
         )}
       </main>

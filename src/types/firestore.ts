@@ -14,8 +14,8 @@ export interface TimeRecord {
   name: string;
   date: Timestamp;
   type: 'work' | 'time_off';
-  startTime: string; // HH:mm format
-  endTime: string; // HH:mm format
+  startTime: string;
+  endTime: string;
   totalHours: number;
   createdAt: Timestamp;
 }
@@ -23,7 +23,7 @@ export interface TimeRecord {
 export interface MonthlyGoal {
   id: string;
   userId: string;
-  month: string; // YYYY-MM format
+  month: string;
   hoursGoal: number;
   createdAt: Timestamp;
 }
@@ -41,14 +41,13 @@ export interface HourConversion {
 export interface UserSettings {
   id: string;
   userId: string;
-  defaultStartTime?: string; // HH:mm format
-  defaultEndTime?: string; // HH:mm format
+  defaultStartTime?: string;
+  defaultEndTime?: string;
   workingDays: 'weekdays' | 'all' | 'weekends';
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
-// Helper types for creating/updating documents
 export type CreateUser = Omit<User, 'id' | 'createdAt'>;
 export type CreateTimeRecord = Omit<TimeRecord, 'id' | 'createdAt'>;
 export type CreateMonthlyGoal = Omit<MonthlyGoal, 'id' | 'createdAt'>;
@@ -59,4 +58,6 @@ export type UpdateUser = Partial<Omit<User, 'id' | 'createdAt'>>;
 export type UpdateTimeRecord = Partial<Omit<TimeRecord, 'id' | 'userId' | 'createdAt'>>;
 export type UpdateMonthlyGoal = Partial<Omit<MonthlyGoal, 'id' | 'userId' | 'createdAt'>>;
 export type UpdateHourConversion = Partial<Omit<HourConversion, 'id' | 'userId' | 'createdAt'>>;
-export type UpdateUserSettings = Partial<Omit<UserSettings, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>;
+export type UpdateUserSettings = Partial<
+  Omit<UserSettings, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+>;

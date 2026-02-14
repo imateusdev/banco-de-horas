@@ -1,14 +1,12 @@
 import { TimeRecord, MonthlyGoal, User, HourConversion } from '@/types';
 import { auth } from './firebase/config';
 
-// Helper para obter token de autenticação
 async function getAuthToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
   return await user.getIdToken();
 }
 
-// Helper para fazer requisições autenticadas
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
 
@@ -20,14 +18,13 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
 }
 
 export const clientStorageUtils = {
-  // Time Records
   async getTimeRecords(userId?: string): Promise<TimeRecord[]> {
     const response = await authenticatedFetch('/api/time-records');
     if (!response.ok) {
@@ -69,7 +66,6 @@ export const clientStorageUtils = {
     return this.getTimeRecords(userId);
   },
 
-  // Monthly Goals
   async getMonthlyGoals(userId?: string): Promise<MonthlyGoal[]> {
     const response = await authenticatedFetch('/api/monthly-goals');
     if (!response.ok) {
@@ -105,7 +101,6 @@ export const clientStorageUtils = {
     return this.getMonthlyGoal(month, userId);
   },
 
-  // Users
   async getUsers(): Promise<User[]> {
     const response = await authenticatedFetch('/api/users');
     if (!response.ok) {
@@ -135,7 +130,6 @@ export const clientStorageUtils = {
     return response.json();
   },
 
-  // Utility functions (remain client-side)
   generateUserSlug(name: string): string {
     return name
       .toLowerCase()
@@ -145,7 +139,6 @@ export const clientStorageUtils = {
       .slice(0, 20);
   },
 
-  // Hour Conversions
   async getHourConversions(userId?: string): Promise<HourConversion[]> {
     try {
       const response = await authenticatedFetch('/api/hour-conversions');
@@ -177,5 +170,5 @@ export const clientStorageUtils = {
       console.error('Error saving hour conversion:', error);
       throw error;
     }
-  }
+  },
 };

@@ -1,14 +1,12 @@
 import { TimeRecord, MonthlyGoal, User, HourConversion } from '@/types';
 import { auth } from './firebase/config';
 
-// Helper para obter token de autenticação
 async function getAuthToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
   return await user.getIdToken();
 }
 
-// Helper para fazer requisições autenticadas
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const token = await getAuthToken();
 
@@ -20,14 +18,13 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     ...options,
     headers: {
       ...options.headers,
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
 }
 
 export const storageUtils = {
-  // Time Records
   async getTimeRecords(): Promise<TimeRecord[]> {
     return this.getUserTimeRecords('current');
   },
@@ -79,7 +76,6 @@ export const storageUtils = {
     }
   },
 
-  // Monthly Goals
   async getMonthlyGoals(): Promise<MonthlyGoal[]> {
     try {
       const response = await authenticatedFetch('/api/monthly-goals');
@@ -130,7 +126,6 @@ export const storageUtils = {
     return this.getMonthlyGoal(month);
   },
 
-  // Users
   async getUsers(): Promise<User[]> {
     try {
       const response = await authenticatedFetch('/api/users');
@@ -185,7 +180,6 @@ export const storageUtils = {
       .slice(0, 20);
   },
 
-  // Hour Conversions
   async getHourConversions(): Promise<HourConversion[]> {
     return this.getUserHourConversions('current');
   },

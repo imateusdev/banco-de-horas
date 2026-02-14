@@ -31,11 +31,11 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         ]);
 
         const convertedToMoney = conversions
-          .filter(c => c.type === 'money')
+          .filter((c) => c.type === 'money')
           .reduce((sum, c) => sum + c.hours, 0);
 
         const usedForTimeOff = conversions
-          .filter(c => c.type === 'time_off')
+          .filter((c) => c.type === 'time_off')
           .reduce((sum, c) => sum + c.hours, 0);
 
         setAccumulatedHours({
@@ -73,7 +73,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -93,25 +93,23 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
 
       await apiClient.createHourConversion(conversion);
 
-      // Reset form
       setFormData({
         hours: '',
         amount: '',
         type: 'money',
       });
 
-      // Reload accumulated hours
       const [totalHours, conversions] = await Promise.all([
         apiClient.getAccumulatedHours(userId),
         apiClient.getHourConversions(userId),
       ]);
 
       const convertedToMoney = conversions
-        .filter(c => c.type === 'money')
+        .filter((c) => c.type === 'money')
         .reduce((sum, c) => sum + c.hours, 0);
 
       const usedForTimeOff = conversions
-        .filter(c => c.type === 'time_off')
+        .filter((c) => c.type === 'time_off')
         .reduce((sum, c) => sum + c.hours, 0);
 
       setAccumulatedHours({
@@ -131,11 +129,10 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -154,8 +151,8 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
       <h2 className="text-2xl font-bold text-white mb-4">Banco de Horas Extras</h2>
-      
-      {/* Resumo das Horas Acumuladas */}
+
+      {}
       {accumulatedHours && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 text-center">
@@ -249,11 +246,10 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
           {formData.hours && parseFloat(formData.hours) > 0 && (
             <div className="bg-blue-900/30 border border-blue-700 rounded-md p-3">
               <p className="text-blue-300 text-sm">
-                <strong>Resumo:</strong> {timeUtils.formatHours(parseFloat(formData.hours))} 
-                {formData.type === 'money' 
+                <strong>Resumo:</strong> {timeUtils.formatHours(parseFloat(formData.hours))}
+                {formData.type === 'money'
                   ? ` serão convertidas em R$ ${parseFloat(formData.amount || '0').toFixed(2)}`
-                  : ' ficarão reservadas para futuras folgas'
-                }
+                  : ' ficarão reservadas para futuras folgas'}
               </p>
             </div>
           )}
@@ -267,22 +263,21 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
-            {isSubmitting ? 'Processando...' : 
-              formData.type === 'money' ? 'Converter em Dinheiro' : 'Reservar para Folga'
-            }
+            {isSubmitting
+              ? 'Processando...'
+              : formData.type === 'money'
+                ? 'Converter em Dinheiro'
+                : 'Reservar para Folga'}
           </button>
 
-          {errors.submit && (
-            <p className="text-red-400 text-sm text-center">{errors.submit}</p>
-          )}
+          {errors.submit && <p className="text-red-400 text-sm text-center">{errors.submit}</p>}
         </form>
       ) : (
         <div className="text-center p-6 bg-gray-700 border border-gray-600 rounded-md">
           <p className="text-gray-300">
-            {accumulatedHours?.totalExtraHours === 0 
+            {accumulatedHours?.totalExtraHours === 0
               ? '🕐 Ainda não há horas extras acumuladas.'
-              : '✅ Todas as horas extras já foram convertidas ou utilizadas.'
-            }
+              : '✅ Todas as horas extras já foram convertidas ou utilizadas.'}
             <br />
             <span className="text-sm text-gray-400">
               Continue trabalhando para acumular mais horas extras!

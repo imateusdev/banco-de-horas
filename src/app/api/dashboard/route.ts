@@ -6,11 +6,10 @@ import {
   getUserHourConversions,
 } from '@/lib/server/firestore';
 import { timeUtils } from '@/lib/calculations';
-import { DailyStats, MonthlyStats, AccumulatedHours, HourConversion } from '@/types';
+import { DailyStats, MonthlyStats, AccumulatedHours } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticação
     const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,14 +20,12 @@ export async function GET(request: NextRequest) {
     const selectedDate = searchParams.get('date') || timeUtils.getCurrentDate();
     const selectedMonth = searchParams.get('month') || timeUtils.getCurrentMonth();
 
-    // Buscar todos os dados em paralelo
     const [timeRecords, monthlyGoal, hourConversions] = await Promise.all([
       getTimeRecordsByUser(userId),
       getUserMonthlyGoal(userId, selectedMonth),
       getUserHourConversions(userId),
     ]);
 
-    // Calcular estatísticas diárias
     const dailyRecords = timeRecords.filter((r) => r.date === selectedDate);
     const totalHoursDay = dailyRecords.reduce((sum, r) => sum + r.totalHours, 0);
 
@@ -38,7 +35,6 @@ export async function GET(request: NextRequest) {
       records: dailyRecords,
     };
 
-    // Calcular estatísticas mensais
     const monthlyRecords = timeRecords.filter((r) => r.date.startsWith(selectedMonth));
     const totalHoursMonth = monthlyRecords.reduce((sum, r) => sum + r.totalHours, 0);
     const difference = totalHoursMonth - monthlyGoal;
@@ -51,10 +47,9 @@ export async function GET(request: NextRequest) {
       workingDays: new Set(monthlyRecords.map((r) => r.date)).size,
     };
 
-    // Calcular horas acumuladas
     const allExtraHours = timeRecords.reduce((sum, record) => {
       const recordMonth = record.date.substring(0, 7);
-      const goal = recordMonth === selectedMonth ? monthlyGoal : 176; // Usar 176 como padrão para meses antigos
+      const goal = recordMonth === selectedMonth ? monthlyGoal : 176;
       const monthRecords = timeRecords.filter((r) => r.date.startsWith(recordMonth));
       const monthTotal = monthRecords.reduce((s, r) => s + r.totalHours, 0);
       const monthExtra = Math.max(0, monthTotal - goal);
@@ -78,7 +73,6 @@ export async function GET(request: NextRequest) {
       usedForTimeOff,
     };
 
-    // Retornar tudo em uma única resposta
     return NextResponse.json({
       dailyStats,
       monthlyStats,
@@ -87,9 +81,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Dashboard API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
