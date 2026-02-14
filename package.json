@@ -1,7 +1,12 @@
 {
   "name": "banco-de-horas",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "author": "imateusdev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imateusdev/banco-de-horas"
+  },
   "scripts": {
     "dev": "bun --bun next dev --turbo",
     "build": "bun --bun next build",
