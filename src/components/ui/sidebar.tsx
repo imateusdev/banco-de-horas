@@ -43,9 +43,7 @@ export const SidebarProvider = ({
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
-      {children}
-    </SidebarContext.Provider>
+    <SidebarContext.Provider value={{ open, setOpen, animate }}>{children}</SidebarContext.Provider>
   );
 };
 
@@ -101,11 +99,7 @@ export const DesktopSidebar = ({
   );
 };
 
-export const MobileSidebar = ({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<'div'>) => {
+export const MobileSidebar = ({ className, children, ...props }: React.ComponentProps<'div'>) => {
   const { open, setOpen } = useSidebar();
   return (
     <>
@@ -116,10 +110,7 @@ export const MobileSidebar = ({
         {...props}
       >
         <div className="flex justify-end z-20 w-full">
-          <Menu
-            className="text-neutral-200 cursor-pointer"
-            onClick={() => setOpen(!open)}
-          />
+          <Menu className="text-neutral-200 cursor-pointer" onClick={() => setOpen(!open)} />
         </div>
         <AnimatePresence>
           {open && (

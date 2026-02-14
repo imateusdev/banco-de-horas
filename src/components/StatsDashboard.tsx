@@ -13,11 +13,7 @@ export default function StatsDashboard({ userId }: StatsDashboardProps) {
   const [selectedDate, setSelectedDate] = useState(timeUtils.getCurrentDate());
   const [selectedMonth, setSelectedMonth] = useState(timeUtils.getCurrentMonth());
 
-  const { data, isLoading: loading } = useDashboardData(
-    userId || '',
-    selectedDate,
-    selectedMonth
-  );
+  const { data, isLoading: loading } = useDashboardData(userId || '', selectedDate, selectedMonth);
 
   const dailyStats = data?.dailyStats || null;
   const monthlyStats = data?.monthlyStats || null;

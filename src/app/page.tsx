@@ -180,9 +180,7 @@ export default function Home() {
             <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-3">
               001 // FEATURES
             </span>
-            <h3 className="text-2xl font-bold text-white tracking-tight mb-2">
-              Controle Total
-            </h3>
+            <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Controle Total</h3>
             <p className="text-sm text-white/60">
               Registre, converta e gerencie suas horas trabalhadas com precisão
             </p>

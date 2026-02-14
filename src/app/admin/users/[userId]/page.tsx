@@ -57,9 +57,7 @@ export default function UserDashboardPage() {
       <div className="fade-in-up stagger-2">
         {activeTab === 'dashboard' && <StatsDashboard userId={userId} />}
 
-        {activeTab === 'history' && (
-          <TimeRecordsList userId={userId} onRecordUpdated={() => {}} />
-        )}
+        {activeTab === 'history' && <TimeRecordsList userId={userId} onRecordUpdated={() => {}} />}
       </div>
     </AdminLayout>
   );

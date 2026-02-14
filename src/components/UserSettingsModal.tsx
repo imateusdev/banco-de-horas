@@ -105,7 +105,9 @@ export default function UserSettingsModal({
                 <h3 className="text-lg font-semibold text-white mb-4">🕐 Horários Padrão</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Entrada</label>
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">
+                      Entrada
+                    </label>
                     <input
                       type="time"
                       value={settings.defaultStartTime || ''}

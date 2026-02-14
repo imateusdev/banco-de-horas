@@ -29,7 +29,10 @@ export const apiClient = {
       headers,
       body: JSON.stringify(record),
     });
-    if (!response.ok) throw new Error('Failed to create time record');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create time record');
+    }
   },
 
   async updateTimeRecord(id: string, updates: Partial<TimeRecord>): Promise<void> {
@@ -39,7 +42,10 @@ export const apiClient = {
       headers,
       body: JSON.stringify({ id, ...updates }),
     });
-    if (!response.ok) throw new Error('Failed to update time record');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to update time record');
+    }
   },
 
   async deleteTimeRecord(id: string, userId: string): Promise<void> {
@@ -65,7 +71,10 @@ export const apiClient = {
       headers,
       body: JSON.stringify(conversion),
     });
-    if (!response.ok) throw new Error('Failed to create hour conversion');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create hour conversion');
+    }
   },
 
   async getMonthlyGoal(userId: string, month: string): Promise<number> {
@@ -81,9 +90,12 @@ export const apiClient = {
     const response = await fetch('/api/monthly-goals', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ userId, month, goal }),
+      body: JSON.stringify({ userId, month, hoursGoal: goal }),
     });
-    if (!response.ok) throw new Error('Failed to save monthly goal');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to save monthly goal');
+    }
   },
 
   async getDailyStats(date: string, userId: string): Promise<DailyStats> {

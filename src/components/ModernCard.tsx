@@ -29,9 +29,7 @@ export default function ModernCard({
               {id}
             </span>
           )}
-          {title && (
-            <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
-          )}
+          {title && <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>}
           {subtitle && (
             <p className="text-xs font-mono text-white/40 uppercase tracking-wider mt-1">
               {subtitle}

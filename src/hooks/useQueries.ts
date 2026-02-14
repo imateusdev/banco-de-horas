@@ -29,7 +29,9 @@ async function fetchWithAuth(url: string, options?: RequestInit) {
 
 function invalidateUserQueries(queryClient: any, userId: string) {
   queryClient.invalidateQueries({ queryKey: ['timeRecords', userId] });
-  queryClient.invalidateQueries({ queryKey: ['dashboard', userId] });
+  queryClient.invalidateQueries({
+    predicate: (query: any) => query.queryKey[0] === 'dashboard' && query.queryKey[1] === userId,
+  });
 }
 
 export function useDashboardData(userId: string, date: string, month: string) {
@@ -103,7 +105,10 @@ export function useCreateHourConversion() {
     mutationFn: (conversion: HourConversion) => apiClient.createHourConversion(conversion),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['hourConversions', variables.userId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', variables.userId] });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'dashboard' && query.queryKey[1] === variables.userId,
+      });
     },
   });
 }
@@ -130,7 +135,10 @@ export function useSaveMonthlyGoal() {
       queryClient.invalidateQueries({
         queryKey: ['monthlyGoal', variables.userId, variables.month],
       });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', variables.userId] });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'dashboard' && query.queryKey[1] === variables.userId,
+      });
     },
   });
 }

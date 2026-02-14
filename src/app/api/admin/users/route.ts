@@ -49,15 +49,16 @@ export async function POST(request: NextRequest) {
   return withAdminAccess(request, async (user, req) => {
     const { email, role } = await getJsonBody<{ email: string; role?: string }>(req);
 
-    if (!email) {
-      return badRequest('Email is required');
+    const { validateEmail, validateRole } = await import('@/lib/server/validation');
+
+    if (!email || !validateEmail(email)) {
+      return badRequest('Invalid email address');
     }
 
-    if (role && !['admin', 'collaborator'].includes(role)) {
-      return badRequest('Invalid role');
+    const targetRole = role || 'collaborator';
+    if (!validateRole(targetRole)) {
+      return badRequest('Invalid role. Must be "admin" or "collaborator"');
     }
-
-    const targetRole = (role || 'collaborator') as 'admin' | 'collaborator';
 
     let targetUser;
     try {
@@ -93,8 +94,10 @@ export async function DELETE(request: NextRequest) {
   return withAdminAccess(request, async (user, req) => {
     const { email } = await getJsonBody<{ email: string }>(req);
 
-    if (!email) {
-      return badRequest('Email is required');
+    const { validateEmail } = await import('@/lib/server/validation');
+
+    if (!email || !validateEmail(email)) {
+      return badRequest('Invalid email address');
     }
 
     let targetUser;

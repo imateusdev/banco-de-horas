@@ -10,7 +10,18 @@ import { DailyStats, MonthlyStats, AccumulatedHours } from '@/types';
 
 export async function GET(request: NextRequest) {
   return withAuth(request, async (user, req) => {
-    const userId = user.uid;
+    const requestedUserId = getQueryParam(req, 'userId');
+    if (requestedUserId) {
+      const { canAccessUserData } = await import('@/lib/server/auth');
+      if (!canAccessUserData(user, requestedUserId)) {
+        return Response.json(
+          { error: 'Forbidden - You can only access your own dashboard' },
+          { status: 403 }
+        );
+      }
+    }
+    const userId = requestedUserId || user.uid;
+
     const selectedDate = getQueryParam(req, 'date') || timeUtils.getCurrentDate();
     const selectedMonth = getQueryParam(req, 'month') || timeUtils.getCurrentMonth();
 

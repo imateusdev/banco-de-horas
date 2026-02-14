@@ -7,8 +7,10 @@ export async function POST(request: NextRequest) {
   return withAdminAccess(request, async (user, req) => {
     const { email } = await getJsonBody<{ email: string }>(req);
 
-    if (!email) {
-      return badRequest('Email is required');
+    const { validateEmail } = await import('@/lib/server/validation');
+
+    if (!email || !validateEmail(email)) {
+      return badRequest('Invalid email address');
     }
 
     let targetUser;

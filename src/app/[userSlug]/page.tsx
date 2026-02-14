@@ -71,31 +71,29 @@ export default function UserDashboard() {
       />
       <div className="flex-1 md:ml-[280px] overflow-auto relative z-10">
         <main className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full min-h-screen">
-        {activeTab === 'dashboard' && (
-          <StatsDashboard  userId={user.id} />
-        )}
+          {activeTab === 'dashboard' && <StatsDashboard userId={user.id} />}
 
-        {activeTab === 'register' && (
-          <TimeRecordForm
-            userId={user.id}
-            userName={user.name}
-            onRecordAdded={() => setActiveTab('dashboard')}
-          />
-        )}
+          {activeTab === 'register' && (
+            <TimeRecordForm
+              userId={user.id}
+              userName={user.name}
+              onRecordAdded={() => setActiveTab('dashboard')}
+            />
+          )}
 
-        {activeTab === 'goal' && (
-          <MonthlyGoalForm userId={user.id} onGoalUpdated={() => setActiveTab('dashboard')} />
-        )}
+          {activeTab === 'goal' && (
+            <MonthlyGoalForm userId={user.id} onGoalUpdated={() => setActiveTab('dashboard')} />
+          )}
 
-        {activeTab === 'conversion' && (
-          <HourConversionForm
-            userId={user.id}
-            userName={user.name}
-            onConversionAdded={() => setActiveTab('dashboard')}
-          />
-        )}
+          {activeTab === 'conversion' && (
+            <HourConversionForm
+              userId={user.id}
+              userName={user.name}
+              onConversionAdded={() => setActiveTab('dashboard')}
+            />
+          )}
 
-        {activeTab === 'history' && <TimeRecordsList userId={user.id} />}
+          {activeTab === 'history' && <TimeRecordsList userId={user.id} />}
         </main>
       </div>
     </div>

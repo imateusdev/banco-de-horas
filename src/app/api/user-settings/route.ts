@@ -27,28 +27,31 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return withAuth(request, async (user, req) => {
-    const { defaultStartTime, defaultEndTime, workingDays } = await getJsonBody<{
+    const body = await getJsonBody<{
+      userId?: string;
       defaultStartTime?: string | null;
       defaultEndTime?: string | null;
       workingDays?: string;
     }>(req);
 
-    if (workingDays && !['weekdays', 'all', 'weekends'].includes(workingDays)) {
-      return badRequest('Invalid workingDays value');
+    const { validateTime, validateWorkingDays } = await import('@/lib/server/validation');
+
+    if (body.workingDays && !validateWorkingDays(body.workingDays)) {
+      return badRequest('Invalid workingDays value. Must be "weekdays", "all", or "weekends"');
     }
 
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (defaultStartTime && !timeRegex.test(defaultStartTime)) {
-      return badRequest('Invalid defaultStartTime format (use HH:MM)');
+    if (body.defaultStartTime && !validateTime(body.defaultStartTime)) {
+      return badRequest('Invalid defaultStartTime format. Use HH:MM');
     }
-    if (defaultEndTime && !timeRegex.test(defaultEndTime)) {
-      return badRequest('Invalid defaultEndTime format (use HH:MM)');
+
+    if (body.defaultEndTime && !validateTime(body.defaultEndTime)) {
+      return badRequest('Invalid defaultEndTime format. Use HH:MM');
     }
 
     await createOrUpdateUserSettings(user.uid, {
-      defaultStartTime,
-      defaultEndTime,
-      workingDays: (workingDays || 'weekdays') as 'weekdays' | 'all' | 'weekends',
+      defaultStartTime: body.defaultStartTime,
+      defaultEndTime: body.defaultEndTime,
+      workingDays: body.workingDays as 'weekdays' | 'all' | undefined,
     });
 
     const settings = await getUserSettings(user.uid);

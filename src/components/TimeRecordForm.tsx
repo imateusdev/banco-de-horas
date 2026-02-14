@@ -415,7 +415,10 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="startTime" className="block text-sm font-medium text-neutral-300 mb-2">
+                <label
+                  htmlFor="startTime"
+                  className="block text-sm font-medium text-neutral-300 mb-2"
+                >
                   Horário de Início
                 </label>
                 <input
@@ -433,7 +436,10 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               </div>
 
               <div>
-                <label htmlFor="endTime" className="block text-sm font-medium text-neutral-300 mb-2">
+                <label
+                  htmlFor="endTime"
+                  className="block text-sm font-medium text-neutral-300 mb-2"
+                >
                   Horário de Término
                 </label>
                 <input
@@ -465,7 +471,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-neutral-300">Registro Múltiplo</label>
+              <label className="block text-sm font-medium text-neutral-300">
+                Registro Múltiplo
+              </label>
               <button
                 type="button"
                 onClick={() => {
@@ -543,7 +551,9 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-neutral-300 mb-1">Fim</label>
+                        <label className="block text-xs font-medium text-neutral-300 mb-1">
+                          Fim
+                        </label>
                         <input
                           type="time"
                           value={day.endTime}
