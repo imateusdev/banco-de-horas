@@ -165,7 +165,8 @@ export const apiClient = {
 
   async getDashboardData(
     date: string,
-    month: string
+    month: string,
+    userId?: string
   ): Promise<{
     dailyStats: DailyStats;
     monthlyStats: MonthlyStats;
@@ -173,7 +174,10 @@ export const apiClient = {
     hourConversions: HourConversion[];
   }> {
     const headers = await getAuthHeaders();
-    const response = await fetch(`/api/dashboard?date=${date}&month=${month}`, { headers });
+    const url = userId
+      ? `/api/dashboard?date=${date}&month=${month}&userId=${userId}`
+      : `/api/dashboard?date=${date}&month=${month}`;
+    const response = await fetch(url, { headers });
     if (!response.ok) throw new Error('Failed to fetch dashboard data');
     return response.json();
   },

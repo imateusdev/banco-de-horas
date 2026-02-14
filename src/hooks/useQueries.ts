@@ -37,7 +37,7 @@ function invalidateUserQueries(queryClient: any, userId: string) {
 export function useDashboardData(userId: string, date: string, month: string) {
   return useQuery({
     queryKey: ['dashboard', userId, date, month],
-    queryFn: () => apiClient.getDashboardData(date, month),
+    queryFn: () => apiClient.getDashboardData(date, month, userId),
     enabled: !!userId,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
