@@ -9,6 +9,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const originalFetch = window.fetch;
+
+    window.fetch = async function (...args) {
+      const response = await originalFetch(...args);
+
+      if (response.status === 401) {
+        const url = args[0] as string;
+        if (url.startsWith('/api/')) {
+          console.warn('Token revogado ou expirado. Fazendo logout...');
+          await firebaseSignOut(auth);
+          router.push('/');
+        }
+      }
+
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [router]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

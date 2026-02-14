@@ -15,6 +15,10 @@ export interface MonthlyGoal {
   userId: string;
   month: string;
   hoursGoal: number;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedBy: string;
+  approvedBy?: string;
+  approvedAt?: string;
   createdAt: string;
 }
 
@@ -33,6 +37,10 @@ export interface HourConversion {
   amount: number;
   type: 'money' | 'time_off';
   date: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedBy: string;
+  approvedBy?: string;
+  approvedAt?: string;
   createdAt: string;
 }
 

@@ -216,6 +216,10 @@ export async function getUserMonthlyGoals(userId: string): Promise<MonthlyGoal[]
       userId: data.userId,
       month: data.month,
       hoursGoal: data.hoursGoal,
+      status: data.status || 'approved',
+      requestedBy: data.requestedBy || data.userId,
+      approvedBy: data.approvedBy,
+      approvedAt: data.approvedAt?.toDate().toISOString(),
       createdAt: data.createdAt.toDate().toISOString(),
     };
   });
@@ -230,6 +234,10 @@ export async function saveMonthlyGoal(goal: MonthlyGoal): Promise<void> {
         userId: goal.userId,
         month: goal.month,
         hoursGoal: goal.hoursGoal,
+        status: goal.status,
+        requestedBy: goal.requestedBy,
+        approvedBy: goal.approvedBy || null,
+        approvedAt: goal.approvedAt ? Timestamp.fromDate(new Date(goal.approvedAt)) : null,
         createdAt: Timestamp.fromDate(new Date(goal.createdAt)),
       },
       { merge: true }
@@ -241,12 +249,43 @@ export async function getUserMonthlyGoal(userId: string, month: string): Promise
     .collection('monthlyGoals')
     .where('userId', '==', userId)
     .where('month', '==', month)
+    .where('status', '==', 'approved')
     .limit(1)
     .get();
 
   if (snapshot.empty) return 0;
 
   return snapshot.docs[0].data().hoursGoal || 0;
+}
+
+export async function getUserMonthlyGoalWithStatus(
+  userId: string,
+  month: string
+): Promise<MonthlyGoal | null> {
+  const snapshot = await adminDb
+    .collection('monthlyGoals')
+    .where('userId', '==', userId)
+    .where('month', '==', month)
+    .orderBy('createdAt', 'desc')
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) return null;
+
+  const doc = snapshot.docs[0];
+  const data = doc.data();
+
+  return {
+    id: doc.id,
+    userId: data.userId,
+    month: data.month,
+    hoursGoal: data.hoursGoal,
+    status: data.status || 'approved',
+    requestedBy: data.requestedBy || data.userId,
+    approvedBy: data.approvedBy,
+    approvedAt: data.approvedAt?.toDate().toISOString(),
+    createdAt: data.createdAt.toDate().toISOString(),
+  };
 }
 
 export async function getUserHourConversions(userId: string): Promise<HourConversion[]> {
@@ -266,6 +305,10 @@ export async function getUserHourConversions(userId: string): Promise<HourConver
       amount: data.amount,
       type: data.type,
       date: data.date.toDate().toISOString().split('T')[0],
+      status: data.status || 'approved',
+      requestedBy: data.requestedBy || data.userId,
+      approvedBy: data.approvedBy,
+      approvedAt: data.approvedAt?.toDate().toISOString(),
       createdAt: data.createdAt.toDate().toISOString(),
     };
   });
@@ -281,6 +324,12 @@ export async function createHourConversion(conversion: HourConversion): Promise<
       amount: conversion.amount,
       type: conversion.type,
       date: Timestamp.fromDate(new Date(conversion.date)),
+      status: conversion.status,
+      requestedBy: conversion.requestedBy,
+      approvedBy: conversion.approvedBy || null,
+      approvedAt: conversion.approvedAt
+        ? Timestamp.fromDate(new Date(conversion.approvedAt))
+        : null,
       createdAt: Timestamp.fromDate(new Date(conversion.createdAt)),
     });
 }

@@ -180,7 +180,7 @@ export default function UsersManager() {
             className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
               isCreating || !newUserName.trim()
                 ? 'bg-neutral-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
+                : 'bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
             }`}
           >
             {isCreating ? 'Criando...' : 'Criar Usuário'}

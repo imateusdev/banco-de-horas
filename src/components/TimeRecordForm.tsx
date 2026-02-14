@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { timeUtils } from '@/lib/calculations';
 import { useUserSettings, useCreateTimeRecord, useCreateHourConversion } from '@/hooks/useQueries';
+import { HourConversion } from '@/types';
 import UserSettingsModal from './UserSettingsModal';
 
 interface TimeRecordFormProps {
@@ -174,7 +175,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               type: 'time_off' as 'money' | 'time_off',
               date: record.date,
               createdAt: new Date().toISOString(),
-            };
+            } as HourConversion;
 
             await createConversion.mutateAsync(conversion);
           }
@@ -202,7 +203,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             type: 'time_off' as 'money' | 'time_off',
             date: record.date,
             createdAt: new Date().toISOString(),
-          };
+          } as HourConversion;
 
           await createConversion.mutateAsync(conversion);
         }
@@ -406,7 +407,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                 id="type"
                 value={formData.type}
                 onChange={(e) => handleInputChange('type', e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
               >
                 <option value="work">🏢 Trabalho Normal</option>
                 <option value="time_off">🏖️ Folga (desconta horas extras)</option>
@@ -485,7 +486,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                   };
                   setMultipleDays((prev) => [...prev, newDay]);
                 }}
-                className="px-3 py-1 text-sm bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
+                className="px-3 py-1 text-sm bg-linear-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
               >
                 + Adicionar Dia
               </button>
@@ -573,7 +574,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             newMultipleDays[index].type = e.target.value as 'work' | 'time_off';
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                          className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white [&>option]:bg-[#1a1a1a] [&>option]:text-white"
                         >
                           <option value="work">🏢</option>
                           <option value="time_off">🏖️</option>
@@ -584,7 +585,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             const newMultipleDays = multipleDays.filter((_, i) => i !== index);
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="px-2 py-1 text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
+                          className="px-2 py-1 text-xs bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
                         >
                           🗑️
                         </button>
@@ -619,7 +620,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
             isSubmitting || (isMultipleMode && multipleDays.length === 0)
               ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-              : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
+              : 'bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
           }`}
         >
           {isSubmitting

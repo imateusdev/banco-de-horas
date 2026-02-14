@@ -120,7 +120,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
           <select
             value={filterMonth}
             onChange={(e) => setFilterMonth(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
           >
             <option value="">Todos os meses</option>
             {getUniqueMonths().map((month) => {
@@ -238,7 +238,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                                 type: e.target.value as 'work' | 'time_off',
                               }))
                             }
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
                           >
                             <option value="work">🏢 Trabalho</option>
                             <option value="time_off">🏖️ Folga</option>
@@ -289,7 +289,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                       <div className="flex space-x-2">
                         <button
                           onClick={saveEdit}
-                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
+                          className="px-4 py-2 bg-linear-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
                         >
                           Salvar
                         </button>
@@ -341,13 +341,13 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                         <div className="flex space-x-2">
                           <button
                             onClick={() => startEditing(record)}
-                            className="px-3 py-1 text-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-md shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all"
+                            className="px-3 py-1 text-sm bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-md shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => handleDelete(record.id)}
-                            className="px-3 py-1 text-sm bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
+                            className="px-3 py-1 text-sm bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
                           >
                             Excluir
                           </button>

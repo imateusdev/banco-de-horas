@@ -7,7 +7,13 @@ import {
   getJsonBody,
   successResponse,
 } from '@/lib/server/api-helpers';
-import { getUserMonthlyGoals, getUserMonthlyGoal, saveMonthlyGoal } from '@/lib/server/firestore';
+import {
+  getUserMonthlyGoals,
+  getUserMonthlyGoal,
+  getUserMonthlyGoalWithStatus,
+  saveMonthlyGoal,
+} from '@/lib/server/firestore';
+import { MonthlyGoal } from '@/types';
 
 export async function GET(request: NextRequest) {
   return withUserAccess(
@@ -15,6 +21,7 @@ export async function GET(request: NextRequest) {
     (req) => getQueryParam(req, 'userId'),
     async (user, userId, req) => {
       const month = getQueryParam(req, 'month');
+      const withStatus = getQueryParam(req, 'withStatus');
 
       if (month) {
         const { validateMonth } = await import('@/lib/server/validation');
@@ -22,8 +29,13 @@ export async function GET(request: NextRequest) {
           return badRequest('Invalid month format. Use YYYY-MM');
         }
 
-        const goal = await getUserMonthlyGoal(userId, month);
-        return Response.json({ goal });
+        if (withStatus === 'true') {
+          const goalData = await getUserMonthlyGoalWithStatus(userId, month);
+          return Response.json({ goal: goalData });
+        } else {
+          const goal = await getUserMonthlyGoal(userId, month);
+          return Response.json({ goal });
+        }
       } else {
         const goals = await getUserMonthlyGoals(userId);
         return Response.json(goals);
@@ -38,7 +50,9 @@ export async function POST(request: NextRequest) {
     const body = await getJsonBody<any>(req);
     const targetUserId = body.userId || user.uid;
 
-    const { canAccessUserData } = await import('@/lib/server/auth');
+    const { canAccessUserData, isAdmin } = await import('@/lib/server/auth');
+    const isAdminUser = isAdmin(user);
+
     if (!canAccessUserData(user, targetUserId)) {
       return Response.json(
         { error: 'Forbidden - You can only create your own monthly goals' },
@@ -52,11 +66,15 @@ export async function POST(request: NextRequest) {
       return badRequest('Invalid month format. Use YYYY-MM');
     }
 
-    const goal = {
+    const goal: MonthlyGoal = {
       id: body.id || `${targetUserId}-${body.month}`,
       userId: targetUserId,
       month: body.month,
       hoursGoal: validateNumber(body.hoursGoal, 0, 500),
+      status: (isAdminUser ? 'approved' : 'pending') as 'approved' | 'pending',
+      requestedBy: user.uid,
+      approvedBy: isAdminUser ? user.uid : undefined,
+      approvedAt: isAdminUser ? new Date().toISOString() : undefined,
       createdAt: new Date().toISOString(),
     };
 

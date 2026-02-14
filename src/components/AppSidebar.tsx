@@ -12,7 +12,10 @@ import {
   LogOut,
   Users,
   ArrowLeft,
+  CheckCircle,
 } from 'lucide-react';
+import { usePendingApprovals } from '@/hooks/useQueries';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
@@ -43,6 +46,9 @@ export default function AppSidebar({
   hideNavigation = false,
 }: AppSidebarProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const { data: pendingData } = usePendingApprovals(isAdmin || false);
+  const pendingCount = pendingData?.total || 0;
 
   const links = [
     {
@@ -51,7 +57,7 @@ export default function AppSidebar({
       icon: (
         <LayoutDashboard
           className={cn(
-            'h-6 w-6 flex-shrink-0',
+            'h-6 w-6 shrink-0',
             activeTab === 'dashboard' ? 'text-blue-400' : 'text-neutral-400'
           )}
         />
@@ -64,7 +70,7 @@ export default function AppSidebar({
       icon: (
         <Clock
           className={cn(
-            'h-6 w-6 flex-shrink-0',
+            'h-6 w-6 shrink-0',
             activeTab === 'register' ? 'text-blue-400' : 'text-neutral-400'
           )}
         />
@@ -77,7 +83,7 @@ export default function AppSidebar({
       icon: (
         <Target
           className={cn(
-            'h-6 w-6 flex-shrink-0',
+            'h-6 w-6 shrink-0',
             activeTab === 'goal' ? 'text-blue-400' : 'text-neutral-400'
           )}
         />
@@ -90,7 +96,7 @@ export default function AppSidebar({
       icon: (
         <DollarSign
           className={cn(
-            'h-6 w-6 flex-shrink-0',
+            'h-6 w-6 shrink-0',
             activeTab === 'conversion' ? 'text-blue-400' : 'text-neutral-400'
           )}
         />
@@ -103,7 +109,7 @@ export default function AppSidebar({
       icon: (
         <History
           className={cn(
-            'h-6 w-6 flex-shrink-0',
+            'h-6 w-6 shrink-0',
             activeTab === 'history' ? 'text-blue-400' : 'text-neutral-400'
           )}
         />
@@ -124,7 +130,7 @@ export default function AppSidebar({
                   link={{
                     label: 'Voltar',
                     href: '#',
-                    icon: <ArrowLeft className="text-neutral-400 h-6 w-6 flex-shrink-0" />,
+                    icon: <ArrowLeft className="text-neutral-400 h-6 w-6 shrink-0" />,
                   }}
                   onClick={onBackClick}
                   className="mb-4 border-b border-neutral-800 pb-4"
@@ -142,21 +148,40 @@ export default function AppSidebar({
           )}
         </div>
         <div>
-          {isAdmin && onAdminClick && (
-            <SidebarLink
-              link={{
-                label: 'Gerenciar Usuários',
-                href: '#',
-                icon: <Users className="text-neutral-400 h-6 w-6 flex-shrink-0" />,
-              }}
-              onClick={onAdminClick}
-            />
+          {isAdmin && (
+            <>
+              <SidebarLink
+                link={{
+                  label: 'Gerenciar Usuários',
+                  href: '#',
+                  icon: <Users className="text-neutral-400 h-6 w-6 shrink-0" />,
+                }}
+                onClick={onAdminClick}
+              />
+              <SidebarLink
+                link={{
+                  label: 'Aprovações',
+                  href: '#',
+                  icon: (
+                    <div className="relative">
+                      <CheckCircle className="text-neutral-400 h-6 w-6 shrink-0" />
+                      {pendingCount > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center text-white font-bold">
+                          {pendingCount > 9 ? '9+' : pendingCount}
+                        </span>
+                      )}
+                    </div>
+                  ),
+                }}
+                onClick={() => router.push('/admin/approvals')}
+              />
+            </>
           )}
           <SidebarLink
             link={{
               label: 'Sair',
               href: '#',
-              icon: <LogOut className="text-neutral-400 h-6 w-6 flex-shrink-0" />,
+              icon: <LogOut className="text-neutral-400 h-6 w-6 shrink-0" />,
             }}
             onClick={onLogout}
           />
@@ -166,11 +191,11 @@ export default function AppSidebar({
                 <img
                   src={user.photoURL}
                   alt={user.displayName || 'User'}
-                  className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-neutral-700 flex items-center justify-center">
+                <div className="h-10 w-10 shrink-0 rounded-full bg-neutral-700 flex items-center justify-center">
                   <span className="text-sm font-medium text-neutral-200">
                     {(user.displayName || user.email || '?')[0].toUpperCase()}
                   </span>
@@ -184,7 +209,7 @@ export default function AppSidebar({
                 className="text-neutral-200 text-sm"
               >
                 <p className="font-semibold">{user.displayName || 'Usuário'}</p>
-                <p className="text-neutral-400 text-xs truncate max-w-[180px]">{user.email}</p>
+                <p className="text-neutral-400 text-xs truncate max-w-45">{user.email}</p>
               </motion.div>
             </div>
           </div>
@@ -200,7 +225,7 @@ export const Logo = () => {
       <img
         src="/icon.jpeg"
         alt="Banco de Horas"
-        className="h-8 w-8 rounded-lg flex-shrink-0 object-cover"
+        className="h-8 w-8 rounded-lg shrink-0 object-cover"
       />
       <motion.span
         initial={{ opacity: 0 }}
@@ -219,7 +244,7 @@ export const LogoIcon = () => {
       <img
         src="/icon.jpeg"
         alt="Banco de Horas"
-        className="h-8 w-8 rounded-lg flex-shrink-0 object-cover"
+        className="h-8 w-8 rounded-lg shrink-0 object-cover"
       />
     </div>
   );

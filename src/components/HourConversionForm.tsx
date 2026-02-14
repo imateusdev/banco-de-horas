@@ -18,6 +18,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
     type: 'money' as 'money' | 'time_off',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState(false);
 
   const { data, isLoading: loading } = useDashboardData(
     userId,
@@ -54,7 +55,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
     }
 
     try {
-      const conversion: HourConversion = {
+      const conversion = {
         id: timeUtils.generateId(),
         userId,
         hours: parseFloat(formData.hours),
@@ -62,7 +63,7 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         type: formData.type,
         date: timeUtils.getCurrentDate(),
         createdAt: new Date().toISOString(),
-      };
+      } as HourConversion;
 
       await createConversion.mutateAsync(conversion);
 
@@ -71,6 +72,9 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
         amount: '',
         type: 'money',
       });
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
 
       onConversionAdded?.();
     } catch (error) {
@@ -148,9 +152,9 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
               id="type"
               value={formData.type}
               onChange={(e) => handleInputChange('type', e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
-              <option value="money">$ Converter em Dinheiro</option>
+              <option value="money">💰 Converter em Dinheiro</option>
               <option value="time_off">🏖️ Usar para Folga Futura</option>
             </select>
           </div>
@@ -210,13 +214,19 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
             </div>
           )}
 
+          {success && (
+            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded text-sm text-green-300 text-center">
+              ✓ Conversão salva com sucesso!
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
               isSubmitting
                 ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
+                : 'bg-linear-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
             }`}
           >
             {isSubmitting

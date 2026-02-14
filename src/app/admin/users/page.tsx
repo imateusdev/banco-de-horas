@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
             <select
               value={newUserRole}
               onChange={(e) => setNewUserRole(e.target.value as 'admin' | 'collaborator')}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:bg-white/10"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:bg-white/10 [&>option]:bg-[#1a1a1a] [&>option]:text-white"
             >
               <option value="collaborator">Colaborador (apenas suas horas)</option>
               <option value="admin">Administrador (todas as horas)</option>
@@ -169,7 +169,7 @@ export default function AdminUsersPage() {
               deleteUser.isPending ||
               !newUserEmail
                 ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
+                : 'bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
             }`}
           >
             {addUser.isPending ||
@@ -213,7 +213,7 @@ export default function AdminUsersPage() {
                     {admin.uid && (
                       <button
                         onClick={() => router.push(`/admin/users/${admin.uid}`)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+                        className="px-4 py-2 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
                       >
                         📊 Ver Dashboard
                       </button>
@@ -234,7 +234,7 @@ export default function AdminUsersPage() {
                         deleteUser.isPending ||
                         activeAdmins.length === 1
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/20 hover:shadow-gray-500/40'
+                          : 'bg-linear-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white shadow-lg shadow-gray-500/20 hover:shadow-gray-500/40'
                       }`}
                       title={
                         activeAdmins.length === 1
@@ -260,7 +260,7 @@ export default function AdminUsersPage() {
                         deleteUser.isPending ||
                         activeAdmins.length === 1
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
+                          : 'bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
                       }`}
                       title={
                         activeAdmins.length === 1
@@ -299,7 +299,7 @@ export default function AdminUsersPage() {
                     {collaborator.uid && (
                       <button
                         onClick={() => router.push(`/admin/users/${collaborator.uid}`)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+                        className="px-4 py-2 bg-linear-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
                       >
                         📊 Ver Dashboard
                       </button>
@@ -318,7 +318,7 @@ export default function AdminUsersPage() {
                         demoteUser.isPending ||
                         deleteUser.isPending
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40'
+                          : 'bg-linear-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40'
                       }`}
                     >
                       Promover
@@ -337,7 +337,7 @@ export default function AdminUsersPage() {
                         demoteUser.isPending ||
                         deleteUser.isPending
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
+                          : 'bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
                       }`}
                     >
                       Remover
@@ -381,7 +381,7 @@ export default function AdminUsersPage() {
                         demoteUser.isPending ||
                         deleteUser.isPending
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
+                          : 'bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
                       }`}
                     >
                       Remover
@@ -426,7 +426,7 @@ export default function AdminUsersPage() {
                         demoteUser.isPending ||
                         deleteUser.isPending
                           ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
-                          : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
+                          : 'bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/40'
                       }`}
                     >
                       Remover

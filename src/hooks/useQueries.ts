@@ -41,9 +41,8 @@ export function useDashboardData(userId: string, date: string, month: string) {
     enabled: !!userId,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
-    refetchOnMount: false,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -126,6 +125,22 @@ export function useMonthlyGoal(userId: string, month: string) {
   });
 }
 
+export function useMonthlyGoalWithStatus(userId: string, month: string) {
+  return useQuery({
+    queryKey: ['monthlyGoalWithStatus', userId, month],
+    queryFn: () =>
+      fetchWithAuth(`/api/monthly-goals?userId=${userId}&month=${month}&withStatus=true`).then(
+        (data) => data.goal
+      ),
+    enabled: !!userId && !!month,
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
 export function useSaveMonthlyGoal() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -134,6 +149,9 @@ export function useSaveMonthlyGoal() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['monthlyGoal', variables.userId, variables.month],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['monthlyGoalWithStatus', variables.userId, variables.month],
       });
       queryClient.invalidateQueries({
         predicate: (query) =>
@@ -237,4 +255,51 @@ export function useDemoteUser() {
 
 export function useDeleteUser() {
   return createAdminMutation('/api/admin/users', 'DELETE', (email) => ({ email }));
+}
+
+export function usePendingApprovals(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['pendingApprovals'],
+    queryFn: () => fetchWithAuth('/api/admin/pending-approvals'),
+    enabled,
+    staleTime: ADMIN_STALE_TIME,
+    refetchInterval: enabled ? 30000 : false,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+export function useApproveConversion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      conversionId,
+      action,
+    }: {
+      conversionId: string;
+      action: 'approve' | 'reject';
+    }) =>
+      fetchWithAuth('/api/hour-conversions/approve', {
+        method: 'POST',
+        body: JSON.stringify({ conversionId, action }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingApprovals'] });
+      queryClient.invalidateQueries({ queryKey: ['hourConversions'] });
+    },
+  });
+}
+
+export function useApproveGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ goalId, action }: { goalId: string; action: 'approve' | 'reject' }) =>
+      fetchWithAuth('/api/monthly-goals/approve', {
+        method: 'POST',
+        body: JSON.stringify({ goalId, action }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pendingApprovals'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyGoal'] });
+    },
+  });
 }

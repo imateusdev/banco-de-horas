@@ -175,7 +175,7 @@ export default function UserSettingsModal({
                   className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                     saveSettings.isPending
                       ? 'bg-neutral-600 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
+                      : 'bg-linear-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
                   }`}
                 >
                   {saveSettings.isPending ? 'Salvando...' : 'Salvar Configurações'}
