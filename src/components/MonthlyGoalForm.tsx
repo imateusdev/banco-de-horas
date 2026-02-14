@@ -79,12 +79,17 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
-      <h2 className="text-2xl font-bold text-white mb-6">Configurar Meta Mensal</h2>
+    <div className="glass-panel p-6 mb-6 fade-in-up">
+      <div className="mb-6">
+        <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-2">
+          GOAL // MONTHLY
+        </span>
+        <h2 className="text-2xl font-bold text-white">Configurar Meta Mensal</h2>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="month" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="month" className="block text-sm font-medium text-neutral-300 mb-2">
             Mês
           </label>
           <input
@@ -92,16 +97,16 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
             id="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
           />
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-neutral-400 mt-1">
             Configurando meta para:{' '}
             <strong className="text-white">{formatMonthDisplay(month)}</strong>
           </p>
         </div>
 
         <div>
-          <label htmlFor="hoursGoal" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="hoursGoal" className="block text-sm font-medium text-neutral-300 mb-2">
             Meta de Horas
           </label>
           <input
@@ -115,16 +120,16 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
             step="0.5"
             min="0"
             max="744"
-            className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400 ${
-              error ? 'border-red-500' : 'border-gray-600'
+            className={`w-full px-3 py-2 bg-white/5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400 ${
+              error ? 'border-red-500' : 'border-white/10'
             }`}
             placeholder="Ex: 176"
           />
           {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
         </div>
 
-        <div className="bg-gray-700 rounded-md p-4 border border-gray-600">
-          <p className="text-sm font-medium text-gray-300 mb-2">Sugestões de metas comuns:</p>
+        <div className="bg-white/5 rounded-md p-4 border border-white/10">
+          <p className="text-sm font-medium text-neutral-300 mb-2">Sugestões de metas comuns:</p>
           <div className="flex flex-wrap gap-2">
             {getSuggestedHours().map((hours) => (
               <button
@@ -134,13 +139,13 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
                   setHoursGoal(hours);
                   setError('');
                 }}
-                className="px-3 py-1 text-sm bg-blue-700 hover:bg-blue-600 text-blue-200 rounded-md transition-colors"
+                className="px-3 py-1 text-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-md shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all"
               >
                 {hours}h
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-neutral-400 mt-2">
             {hoursGoal && !isNaN(parseFloat(hoursGoal)) && parseFloat(hoursGoal) > 0 && (
               <>Aproximadamente {timeUtils.formatHours(parseFloat(hoursGoal) / 4)} por semana</>
             )}
@@ -152,8 +157,8 @@ export default function MonthlyGoalForm({ onGoalUpdated, userId }: MonthlyGoalFo
           disabled={isSubmitting || !hoursGoal}
           className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
             isSubmitting || !hoursGoal
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
+              : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
           }`}
         >
           {isSubmitting ? 'Salvando...' : 'Salvar Meta'}

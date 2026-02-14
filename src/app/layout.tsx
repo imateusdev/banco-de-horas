@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: 'Banco de Horas - Sistema de Controle de Horas',
   description:
     'Sistema simples para controle e acompanhamento de horas trabalhadas com metas mensais',
+  icons: {
+    icon: '/icon.jpeg',
+  },
 };
 
 export default function RootLayout({

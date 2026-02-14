@@ -82,13 +82,13 @@ export default function UserSettingsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-2xl border border-gray-700 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-neutral-800 rounded-lg shadow-2xl border border-neutral-700 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">⚙️ Configurações de Usuário</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors text-2xl"
+              className="text-neutral-400 hover:text-white transition-colors text-2xl"
             >
               ×
             </button>
@@ -96,7 +96,7 @@ export default function UserSettingsModal({
 
           {isLoading || saveSettings.isPending ? (
             <div className="text-center py-8">
-              <div className="text-gray-400">Carregando configurações...</div>
+              <div className="text-neutral-400">Carregando configurações...</div>
             </div>
           ) : (
             <div className="space-y-6">
@@ -105,29 +105,29 @@ export default function UserSettingsModal({
                 <h3 className="text-lg font-semibold text-white mb-4">🕐 Horários Padrão</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Entrada</label>
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">Entrada</label>
                     <input
                       type="time"
                       value={settings.defaultStartTime || ''}
                       onChange={(e) =>
                         handleInputChange('defaultStartTime', e.target.value || null)
                       }
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
                       placeholder="09:00"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Saída</label>
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">Saída</label>
                     <input
                       type="time"
                       value={settings.defaultEndTime || ''}
                       onChange={(e) => handleInputChange('defaultEndTime', e.target.value || null)}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
                       placeholder="18:00"
                     />
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-neutral-400 mt-2">
                   Estes horários serão pré-preenchidos no formulário de registro
                 </p>
               </div>
@@ -148,13 +148,13 @@ export default function UserSettingsModal({
                             e.target.value as UserSettings['workingDays']
                           )
                         }
-                        className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                        className="text-blue-600 bg-neutral-700 border-neutral-600 focus:ring-blue-500"
                       />
-                      <span className="text-gray-300">{getWorkingDaysLabel(option)}</span>
+                      <span className="text-neutral-300">{getWorkingDaysLabel(option)}</span>
                     </label>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-neutral-400 mt-2">
                   O campo de data mostrará apenas os dias correspondentes
                 </p>
               </div>
@@ -172,8 +172,8 @@ export default function UserSettingsModal({
                   disabled={saveSettings.isPending}
                   className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                     saveSettings.isPending
-                      ? 'bg-gray-600 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
+                      ? 'bg-neutral-600 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40'
                   }`}
                 >
                   {saveSettings.isPending ? 'Salvando...' : 'Salvar Configurações'}
@@ -181,7 +181,7 @@ export default function UserSettingsModal({
                 <button
                   onClick={onClose}
                   disabled={saveSettings.isPending}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 bg-neutral-600 text-white rounded-md hover:bg-neutral-700 transition-colors"
                 >
                   Cancelar
                 </button>

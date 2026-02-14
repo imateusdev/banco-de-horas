@@ -9,6 +9,9 @@ import MonthlyGoalForm from '@/components/MonthlyGoalForm';
 import StatsDashboard from '@/components/StatsDashboard';
 import TimeRecordsList from '@/components/TimeRecordsList';
 import HourConversionForm from '@/components/HourConversionForm';
+import AppSidebar from '@/components/AppSidebar';
+import ModernBackground from '@/components/ModernBackground';
+import { cn } from '@/lib/utils';
 
 export default function UserDashboard() {
   const params = useParams();
@@ -42,8 +45,11 @@ export default function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-lg">Carregando...</div>
+      <div className="min-h-screen bg-[#020202] flex items-center justify-center">
+        <ModernBackground />
+        <div className="relative z-10 text-white text-lg font-mono tracking-wider">
+          Carregando...
+        </div>
       </div>
     );
   }
@@ -52,56 +58,19 @@ export default function UserDashboard() {
     return null;
   }
 
-  const tabs = [
-    { id: 'dashboard' as const, label: 'Dashboard', emoji: '📊' },
-    { id: 'register' as const, label: 'Registrar', emoji: '⏰' },
-    { id: 'goal' as const, label: 'Meta', emoji: '🎯' },
-    { id: 'conversion' as const, label: 'Converter Horas', emoji: '💰' },
-    { id: 'history' as const, label: 'Histórico', emoji: '📋' },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-900">
-      {}
-      <header className="bg-gray-800 shadow-lg border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <button
-              onClick={handleBackToUsers}
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              ← Voltar
-            </button>
-            <h1 className="text-2xl font-bold text-white text-center flex-1">👤 {user.name}</h1>
-            <div className="w-16"></div> {}
-          </div>
-        </div>
-      </header>
-
-      {}
-      <nav className="bg-gray-800 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-400 text-blue-400'
-                    : 'border-transparent text-gray-300 hover:text-gray-100 hover:border-gray-500'
-                }`}
-              >
-                <span className="mr-2">{tab.emoji}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
-      {}
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className={cn('flex flex-col md:flex-row bg-[#020202] w-full min-h-screen')}>
+      <ModernBackground />
+      <AppSidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        user={{ displayName: user.name, email: null, photoURL: null }}
+        showBackButton
+        onBackClick={handleBackToUsers}
+        onLogout={() => router.push('/')}
+      />
+      <div className="flex-1 md:ml-[280px] overflow-auto relative z-10">
+        <main className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full min-h-screen">
         {activeTab === 'dashboard' && (
           <StatsDashboard  userId={user.id} />
         )}
@@ -127,7 +96,8 @@ export default function UserDashboard() {
         )}
 
         {activeTab === 'history' && <TimeRecordsList userId={user.id} />}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

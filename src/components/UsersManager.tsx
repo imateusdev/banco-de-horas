@@ -40,22 +40,22 @@ function UserCard({ user, onViewUser }: { user: User; onViewUser: (user: User) =
   const slug = clientStorageUtils.generateUserSlug(user.name);
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-700 rounded-md border border-gray-600 hover:border-gray-500 transition-colors">
+    <div className="flex items-center justify-between p-4 bg-neutral-700 rounded-md border border-neutral-600 hover:border-neutral-500 transition-colors">
       <div>
         <h3 className="font-semibold text-white text-lg">{user.name}</h3>
-        <p className="text-gray-400 text-sm">/{slug}</p>
-        <p className="text-gray-400 text-sm">Criado em: {formatDate(user.createdAt)}</p>
+        <p className="text-neutral-400 text-sm">/{slug}</p>
+        <p className="text-neutral-400 text-sm">Criado em: {formatDate(user.createdAt)}</p>
       </div>
 
       <div className="text-right">
         {loading ? (
-          <p className="text-gray-400">Carregando...</p>
+          <p className="text-neutral-400">Carregando...</p>
         ) : (
           <>
             <p className="text-blue-400 font-semibold text-lg">
               {timeUtils.formatHours(userStats.totalHours)}
             </p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-neutral-400 text-sm">
               {userStats.recordsCount} registro{userStats.recordsCount !== 1 ? 's' : ''}
             </p>
           </>
@@ -144,12 +144,12 @@ export default function UsersManager() {
   return (
     <div className="space-y-6">
       {}
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+      <div className="bg-neutral-800 rounded-lg shadow-lg p-6 border border-neutral-700">
         <h2 className="text-2xl font-bold text-white mb-6">Criar Novo Usuário</h2>
 
         <form onSubmit={handleCreateUser} className="space-y-4">
           <div>
-            <label htmlFor="userName" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="userName" className="block text-sm font-medium text-neutral-300 mb-2">
               Nome do Usuário
             </label>
             <input
@@ -160,15 +160,15 @@ export default function UsersManager() {
                 setNewUserName(e.target.value);
                 setError('');
               }}
-              className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400 ${
-                error ? 'border-red-500' : 'border-gray-600'
+              className={`w-full px-3 py-2 bg-neutral-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400 ${
+                error ? 'border-red-500' : 'border-neutral-600'
               }`}
               placeholder="Digite o nome do usuário"
               maxLength={50}
             />
             {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
             {newUserName && (
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-neutral-400 text-sm mt-1">
                 URL: /{clientStorageUtils.generateUserSlug(newUserName)}
               </p>
             )}
@@ -179,8 +179,8 @@ export default function UsersManager() {
             disabled={isCreating || !newUserName.trim()}
             className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
               isCreating || !newUserName.trim()
-                ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? 'bg-neutral-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
             }`}
           >
             {isCreating ? 'Criando...' : 'Criar Usuário'}
@@ -189,12 +189,12 @@ export default function UsersManager() {
       </div>
 
       {}
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+      <div className="bg-neutral-800 rounded-lg shadow-lg p-6 border border-neutral-700">
         <h2 className="text-2xl font-bold text-white mb-6">Usuários Existentes</h2>
 
         {users.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400">Nenhum usuário criado ainda</p>
+            <p className="text-neutral-400">Nenhum usuário criado ainda</p>
           </div>
         ) : (
           <div className="space-y-3">

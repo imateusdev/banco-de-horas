@@ -41,14 +41,14 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+      <div className="bg-neutral-800 rounded-lg shadow-lg p-6 border border-neutral-700">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-64 mb-6"></div>
+          <div className="h-8 bg-neutral-700 rounded w-64 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-700 rounded-lg p-4">
-                <div className="h-8 bg-gray-600 rounded w-16 mx-auto mb-2"></div>
-                <div className="h-4 bg-gray-600 rounded w-24 mx-auto"></div>
+              <div key={i} className="bg-neutral-700 rounded-lg p-4">
+                <div className="h-8 bg-neutral-600 rounded w-16 mx-auto mb-2"></div>
+                <div className="h-4 bg-neutral-600 rounded w-24 mx-auto"></div>
               </div>
             ))}
           </div>
@@ -62,7 +62,7 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+    <div className="bg-neutral-800 rounded-lg shadow-lg p-6 border border-neutral-700">
       <h2 className="text-2xl font-bold text-white mb-6">💰 Banco de Horas Extras Acumuladas</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -104,7 +104,7 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
       </div>
 
       {}
-      <div className="mt-6 p-4 bg-gray-700 border border-gray-600 rounded-md">
+      <div className="mt-6 p-4 bg-neutral-700 border border-neutral-600 rounded-md">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="mb-2 sm:mb-0">
             <p className="text-white font-medium">
@@ -113,7 +113,7 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
                 {timeUtils.formatHours(accumulatedHours.availableHours)}
               </span>
             </p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-neutral-400 text-sm">
               {accumulatedHours.availableHours > 0
                 ? 'Você pode converter essas horas em dinheiro ou reservar para folgas.'
                 : 'Continue trabalhando para acumular mais horas extras!'}
@@ -122,7 +122,7 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
 
           {accumulatedHours.totalExtraHours > 0 && (
             <div className="text-right">
-              <p className="text-sm text-gray-400">Percentual disponível:</p>
+              <p className="text-sm text-neutral-400">Percentual disponível:</p>
               <p className="text-lg font-bold text-blue-400">
                 {(
                   (accumulatedHours.availableHours / accumulatedHours.totalExtraHours) *
@@ -136,9 +136,9 @@ export default function AccumulatedHoursSection({ userId }: AccumulatedHoursSect
       </div>
 
       {accumulatedHours.totalExtraHours === 0 && (
-        <div className="mt-6 text-center p-4 bg-gray-700 border border-gray-600 rounded-md">
-          <p className="text-gray-300 text-lg">🎯 Ainda não há horas extras acumuladas</p>
-          <p className="text-gray-400 text-sm mt-2">
+        <div className="mt-6 text-center p-4 bg-neutral-700 border border-neutral-600 rounded-md">
+          <p className="text-neutral-300 text-lg">🎯 Ainda não há horas extras acumuladas</p>
+          <p className="text-neutral-400 text-sm mt-2">
             Trabalhe além da sua meta mensal para começar a acumular horas extras!
           </p>
         </div>

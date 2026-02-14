@@ -1,20 +1,67 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import ModernBackground from '@/components/ModernBackground';
+import { Clock } from 'lucide-react';
+import gsap from 'gsap';
 
 export default function Home() {
   const { user, loading, signInWithGoogle } = useAuth();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (user) {
       checkAuthorizationAndRedirect();
     }
   }, [user]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.hero-content',
+        { filter: 'blur(30px)', opacity: 0, scale: 1.02 },
+        { filter: 'blur(0px)', opacity: 1, scale: 1, duration: 1.5, ease: 'expo.out' }
+      );
+
+      gsap.from('.info-card', {
+        y: 40,
+        opacity: 0,
+        stagger: 0.15,
+        duration: 1,
+        ease: 'power4.out',
+        delay: 0.5,
+      });
+
+      const handleMouseMove = (e: MouseEvent) => {
+        if (!ctaRef.current) return;
+        const rect = ctaRef.current.getBoundingClientRect();
+        const dist = Math.hypot(
+          e.clientX - (rect.left + rect.width / 2),
+          e.clientY - (rect.top + rect.height / 2)
+        );
+        if (dist < 150) {
+          gsap.to(ctaRef.current, {
+            x: (e.clientX - (rect.left + rect.width / 2)) * 0.3,
+            y: (e.clientY - (rect.top + rect.height / 2)) * 0.3,
+            duration: 0.6,
+          });
+        } else {
+          gsap.to(ctaRef.current, { x: 0, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.3)' });
+        }
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const checkAuthorizationAndRedirect = async () => {
     try {
@@ -57,77 +104,110 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Carregando...</div>
+      <div className="min-h-screen bg-[#020202] flex items-center justify-center">
+        <ModernBackground />
+        <div className="relative z-10 text-white text-lg font-mono tracking-wider">
+          Carregando...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {}
-        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-          {}
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">⏰</div>
-            <h1 className="text-3xl font-bold text-white mb-2">Banco de Horas</h1>
-            <p className="text-gray-400">Sistema de Controle de Horas</p>
+    <section
+      ref={containerRef}
+      className="relative min-h-screen w-full bg-[#020202] flex items-center justify-center px-4 selection:bg-white selection:text-black overflow-hidden"
+    >
+      <ModernBackground />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 py-12">
+        <div className="hero-content flex-1">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="relative w-2.5 h-2.5 bg-white rounded-full">
+              <div className="absolute inset-0 bg-white rounded-full animate-ping opacity-30" />
+            </div>
+            <span className="font-mono text-[11px] font-bold text-white tracking-[0.2em] uppercase">
+              TIMEBANK.SYSTEM
+            </span>
           </div>
 
-          {}
-          {authError && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
-              <p className="text-red-400 text-sm text-center">{authError}</p>
-            </div>
-          )}
+          <h1 className="text-[clamp(3rem,8vw,8rem)] font-black leading-[0.9] tracking-tighter text-white uppercase mb-6">
+            BANCO DE <br />
+            <span className="text-outline">HORAS</span>
+          </h1>
 
-          {}
+          <p className="font-mono text-[11px] text-white/40 uppercase tracking-[0.35em] max-w-md leading-relaxed mb-12">
+            Sistema avançado de controle e gerenciamento de horas trabalhadas
+          </p>
+
           <button
+            ref={ctaRef}
             onClick={handleGoogleSignIn}
             disabled={isAuthenticating}
-            className="w-full bg-white hover:bg-gray-100 text-gray-900 font-semibold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            className="flex items-center gap-6 group disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isAuthenticating ? (
-              <span>Autenticando...</span>
-            ) : (
-              <>
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <span>Entrar com Google</span>
-              </>
-            )}
+            <div className="w-14 h-14 rounded-full border border-white/15 flex items-center justify-center group-hover:bg-white transition-all duration-500 overflow-hidden group-disabled:group-hover:bg-transparent">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="group-hover:stroke-black stroke-white transition-colors duration-500 group-disabled:stroke-white"
+              >
+                <path
+                  d="M7 17L17 7M17 7H8M17 7V16"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <span className="font-mono text-[11px] font-bold text-white uppercase tracking-[0.2em]">
+              {isAuthenticating ? 'Autenticando...' : 'Entrar com Google'}
+            </span>
           </button>
 
-          {}
-          <div className="mt-8 pt-6 border-t border-gray-700">
-            <p className="text-gray-400 text-sm text-center">
-              Primeiro usuário a fazer login será o administrador
+          {authError && (
+            <div className="mt-8 glass-panel p-4 border-red-500/50">
+              <p className="text-red-400 text-sm font-mono">{authError}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="w-full lg:w-96 flex flex-col gap-4">
+          <div className="info-card glass-panel p-6">
+            <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-3">
+              001 // FEATURES
+            </span>
+            <h3 className="text-2xl font-bold text-white tracking-tight mb-2">
+              Controle Total
+            </h3>
+            <p className="text-sm text-white/60">
+              Registre, converta e gerencie suas horas trabalhadas com precisão
+            </p>
+          </div>
+
+          <div className="info-card glass-panel p-6">
+            <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-3">
+              002 // STATUS
+            </span>
+            <div className="flex justify-between items-center">
+              <h4 className="text-xl font-bold text-white">Sistema Ativo</h4>
+              <Clock className="w-6 h-6 text-white/40" />
+            </div>
+          </div>
+
+          <div className="info-card glass-panel p-6">
+            <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-3">
+              003 // ACESSO
+            </span>
+            <p className="text-xs font-mono text-white/50 leading-relaxed">
+              Primeiro usuário a fazer login será o administrador do sistema
             </p>
           </div>
         </div>
-
-        {}
-        <div className="mt-6 text-center text-gray-500 text-sm">
-          <p>Sistema seguro de controle de horas de trabalho</p>
-        </div>
       </div>
-    </div>
+    </section>
   );
 }

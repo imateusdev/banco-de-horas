@@ -1,17 +1,17 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import StatsDashboard from '@/components/StatsDashboard';
+import TimeRecordsList from '@/components/TimeRecordsList';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 
-export default function Dashboard() {
+export default function HistoricoPage() {
   const { user } = useAuth();
 
   if (!user) return null;
 
   return (
-    <AuthenticatedLayout activeTab="dashboard">
-      <StatsDashboard userId={user.uid} />
+    <AuthenticatedLayout activeTab="history">
+      <TimeRecordsList userId={user.uid} />
     </AuthenticatedLayout>
   );
 }

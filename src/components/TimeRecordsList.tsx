@@ -105,17 +105,22 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
-      <h2 className="text-2xl font-bold text-white mb-6">Histórico de Registros</h2>
+    <div className="glass-panel p-6 fade-in-up">
+      <div className="mb-6">
+        <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-2">
+          HISTORY // RECORDS
+        </span>
+        <h2 className="text-2xl font-bold text-white">Histórico de Registros</h2>
+      </div>
 
       {}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Filtrar por mês</label>
+          <label className="block text-sm font-medium text-neutral-300 mb-2">Filtrar por mês</label>
           <select
             value={filterMonth}
             onChange={(e) => setFilterMonth(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
           >
             <option value="">Todos os meses</option>
             {getUniqueMonths().map((month) => {
@@ -149,7 +154,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
             onClick={() => {
               setFilterMonth('');
             }}
-            className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 bg-white/5 border border-white/10 rounded-md hover:bg-white/10 text-white transition-all"
           >
             Limpar Filtros
           </button>
@@ -158,23 +163,23 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
 
       {isLoading && (
         <div className="text-center py-8">
-          <p className="text-gray-400">Carregando registros...</p>
+          <p className="text-neutral-400">Carregando registros...</p>
         </div>
       )}
 
       {!isLoading && (
         <>
-          <div className="bg-gray-700 rounded-md p-4 mb-6 border border-gray-600">
+          <div className="bg-white/5 rounded-md p-4 mb-6 border border-white/10">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-blue-400">{filteredRecords.length}</p>
-            <p className="text-sm text-gray-400">Registros</p>
+            <p className="text-sm text-neutral-400">Registros</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-purple-400">
               {timeUtils.formatHours(getTotalHours())}
             </p>
-            <p className="text-sm text-gray-400">Total de Horas</p>
+            <p className="text-sm text-neutral-400">Total de Horas</p>
           </div>
         </div>
       </div>
@@ -182,7 +187,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
       {}
       {filteredRecords.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-400 text-lg">
+          <p className="text-neutral-400 text-lg">
             {records.length === 0
               ? 'Nenhum registro encontrado'
               : 'Nenhum registro corresponde aos filtros'}
@@ -191,30 +196,30 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
       ) : (
         <div className="space-y-4">
           {filteredRecords.map((record) => (
-            <div key={record.id} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
+            <div key={record.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
               {editingRecord === record.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Nome</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">Nome</label>
                       <input
                         type="text"
                         value={editForm.name || ''}
                         onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Data</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">Data</label>
                       <input
                         type="date"
                         value={editForm.date || ''}
                         onChange={(e) => setEditForm((prev) => ({ ...prev, date: e.target.value }))}
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Tipo</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">Tipo</label>
                       <select
                         value={editForm.type || 'work'}
                         onChange={(e) =>
@@ -223,32 +228,32 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                             type: e.target.value as 'work' | 'time_off',
                           }))
                         }
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
                       >
                         <option value="work">🏢 Trabalho</option>
                         <option value="time_off">🏖️ Folga</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Início</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">Início</label>
                       <input
                         type="time"
                         value={editForm.startTime || ''}
                         onChange={(e) =>
                           setEditForm((prev) => ({ ...prev, startTime: e.target.value }))
                         }
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Fim</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">Fim</label>
                       <input
                         type="time"
                         value={editForm.endTime || ''}
                         onChange={(e) =>
                           setEditForm((prev) => ({ ...prev, endTime: e.target.value }))
                         }
-                        className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
                       />
                     </div>
                   </div>
@@ -267,13 +272,13 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                   <div className="flex space-x-2">
                     <button
                       onClick={saveEdit}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
                     >
                       Salvar
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-md hover:bg-white/10 transition-all"
                     >
                       Cancelar
                     </button>
@@ -295,7 +300,7 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                           {record.type === 'time_off' ? '🏖️ Folga' : '🏢 Trabalho'}
                         </span>
                       </div>
-                      <p className="text-gray-400">{formatDateWithWeekday(record.date)}</p>
+                      <p className="text-neutral-400">{formatDateWithWeekday(record.date)}</p>
                     </div>
                     <div className="text-right">
                       <p
@@ -306,26 +311,26 @@ export default function TimeRecordsList({ onRecordUpdated, userId }: TimeRecords
                         {record.type === 'time_off' ? '-' : ''}
                         {timeUtils.formatHours(record.totalHours)}
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-neutral-400">
                         {record.startTime} - {record.endTime}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center mt-4">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500">
                       Criado em: {formatDateTime(record.createdAt)}
                     </p>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => startEditing(record)}
-                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        className="px-3 py-1 text-sm bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-md shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(record.id)}
-                        className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        className="px-3 py-1 text-sm bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
                       >
                         Excluir
                       </button>

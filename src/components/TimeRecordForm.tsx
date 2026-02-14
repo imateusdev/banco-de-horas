@@ -263,13 +263,18 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-white">Registrar Horas</h2>
+    <div className="glass-panel p-6 mb-6 fade-in-up">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <span className="font-mono text-[9px] text-white/25 uppercase tracking-widest block mb-2">
+            REGISTER // TIME
+          </span>
+          <h2 className="text-2xl font-bold text-white">Registrar Horas</h2>
+        </div>
         {userId && (
           <button
             onClick={() => setIsSettingsModalOpen(true)}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-md transition-colors"
             title="Configurações"
           >
             ⚙️
@@ -278,12 +283,12 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
       </div>
 
       {}
-      <div className="bg-blue-900/30 border border-blue-700 rounded-md p-3 mb-6">
-        <p className="text-blue-300 text-sm">
+      <div className="bg-white/5 border border-white/10 rounded-md p-3 mb-6">
+        <p className="text-white/80 text-sm">
           <span className="font-semibold">👤 Registrando para:</span> {userName || 'Usuário'}
         </p>
         {userSettings && (
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-white/50 mt-2">
             ⚙️ Configuração:{' '}
             {userSettings.workingDays === 'weekdays'
               ? 'Segunda a Sexta'
@@ -301,26 +306,26 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {}
-        <div className="bg-gray-700 rounded-md p-4 mb-4 border border-gray-600">
-          <p className="text-sm font-medium text-gray-300 mb-3">Modo de Registro:</p>
+        <div className="bg-white/5 rounded-md p-4 mb-4 border border-white/10">
+          <p className="text-sm font-medium text-neutral-300 mb-3">Modo de Registro:</p>
           <div className="flex space-x-4">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="radio"
                 checked={!isMultipleMode}
                 onChange={() => setIsMultipleMode(false)}
-                className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                className="text-blue-600 bg-white/5 border-white/10 focus:ring-blue-500"
               />
-              <span className="text-gray-300">📅 Registro Único</span>
+              <span className="text-neutral-300">📅 Registro Único</span>
             </label>
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
                 type="radio"
                 checked={isMultipleMode}
                 onChange={() => setIsMultipleMode(true)}
-                className="text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                className="text-blue-600 bg-white/5 border-white/10 focus:ring-blue-500"
               />
-              <span className="text-gray-300">📋 Múltiplos Dias</span>
+              <span className="text-neutral-300">📋 Múltiplos Dias</span>
             </label>
           </div>
         </div>
@@ -328,7 +333,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         {!isMultipleMode ? (
           <>
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="date" className="block text-sm font-medium text-neutral-300 mb-2">
                 Data
                 {userSettings && userSettings.workingDays !== 'all' && (
                   <span className="ml-2 text-xs text-yellow-400">
@@ -368,12 +373,12 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                   }
                 }}
                 {...getDateRestrictions()}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                className={`w-full px-3 py-2 bg-white/5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
                   errors.date
                     ? 'border-red-500'
                     : isDateDisabled(formData.date)
                       ? 'border-yellow-500'
-                      : 'border-gray-600'
+                      : 'border-white/10'
                 }`}
               />
               {formData.date && (
@@ -394,14 +399,14 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             </div>
 
             <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="type" className="block text-sm font-medium text-neutral-300 mb-2">
                 Tipo de Registro
               </label>
               <select
                 id="type"
                 value={formData.type}
                 onChange={(e) => handleInputChange('type', e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all duration-300 hover:bg-white/10"
               >
                 <option value="work">🏢 Trabalho Normal</option>
                 <option value="time_off">🏖️ Folga (desconta horas extras)</option>
@@ -410,7 +415,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="startTime" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="startTime" className="block text-sm font-medium text-neutral-300 mb-2">
                   Horário de Início
                 </label>
                 <input
@@ -418,8 +423,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                   id="startTime"
                   value={formData.startTime}
                   onChange={(e) => handleInputChange('startTime', e.target.value)}
-                  className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                    errors.startTime ? 'border-red-500' : 'border-gray-600'
+                  className={`w-full px-3 py-2 bg-white/5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                    errors.startTime ? 'border-red-500' : 'border-white/10'
                   }`}
                 />
                 {errors.startTime && (
@@ -428,7 +433,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
               </div>
 
               <div>
-                <label htmlFor="endTime" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="endTime" className="block text-sm font-medium text-neutral-300 mb-2">
                   Horário de Término
                 </label>
                 <input
@@ -436,8 +441,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                   id="endTime"
                   value={formData.endTime}
                   onChange={(e) => handleInputChange('endTime', e.target.value)}
-                  className={`w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
-                    errors.endTime ? 'border-red-500' : 'border-gray-600'
+                  className={`w-full px-3 py-2 bg-white/5 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white ${
+                    errors.endTime ? 'border-red-500' : 'border-white/10'
                   }`}
                 />
                 {errors.endTime && <p className="text-red-400 text-sm mt-1">{errors.endTime}</p>}
@@ -447,8 +452,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
             {formData.startTime &&
               formData.endTime &&
               timeUtils.isValidTimeRange(formData.startTime, formData.endTime) && (
-                <div className="bg-blue-900/50 border border-blue-700 rounded-md p-3">
-                  <p className="text-blue-300 text-sm">
+                <div className="bg-white/5 border border-white/10 rounded-md p-3">
+                  <p className="text-white/80 text-sm">
                     <strong>Horas calculadas:</strong>{' '}
                     {timeUtils.formatHours(
                       timeUtils.calculateHoursDifference(formData.startTime, formData.endTime)
@@ -460,7 +465,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-300">Registro Múltiplo</label>
+              <label className="block text-sm font-medium text-neutral-300">Registro Múltiplo</label>
               <button
                 type="button"
                 onClick={() => {
@@ -472,23 +477,23 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                   };
                   setMultipleDays((prev) => [...prev, newDay]);
                 }}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                className="px-3 py-1 text-sm bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white rounded-md shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all"
               >
                 + Adicionar Dia
               </button>
             </div>
 
             {multipleDays.length === 0 ? (
-              <div className="text-center py-8 bg-gray-700 rounded-md border border-gray-600">
-                <p className="text-gray-400">Clique em &quot;Adicionar Dia&quot; para começar</p>
+              <div className="text-center py-8 bg-white/5 rounded-md border border-white/10">
+                <p className="text-neutral-400">Clique em &quot;Adicionar Dia&quot; para começar</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {multipleDays.map((day, index) => (
-                  <div key={index} className="bg-gray-700 rounded-md p-4 border border-gray-600">
+                  <div key={index} className="bg-white/5 rounded-md p-4 border border-white/10">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                       <div>
-                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                        <label className="block text-xs font-medium text-neutral-300 mb-1">
                           Data
                           {userSettings && userSettings.workingDays !== 'all' && (
                             <span className="ml-1 text-yellow-400">*</span>
@@ -503,10 +508,10 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             setMultipleDays(newMultipleDays);
                           }}
                           {...getDateRestrictions()}
-                          className={`w-full px-2 py-1 text-sm bg-gray-600 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white ${
+                          className={`w-full px-2 py-1 text-sm bg-white/5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white ${
                             day.date && isDateDisabled(day.date)
                               ? 'border-yellow-500'
-                              : 'border-gray-500'
+                              : 'border-white/10'
                           }`}
                         />
                         {day.date && (
@@ -523,7 +528,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-300 mb-1">
+                        <label className="block text-xs font-medium text-neutral-300 mb-1">
                           Início
                         </label>
                         <input
@@ -534,11 +539,11 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             newMultipleDays[index].startTime = e.target.value;
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                          className="w-full px-2 py-1 text-sm bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-300 mb-1">Fim</label>
+                        <label className="block text-xs font-medium text-neutral-300 mb-1">Fim</label>
                         <input
                           type="time"
                           value={day.endTime}
@@ -547,7 +552,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             newMultipleDays[index].endTime = e.target.value;
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="w-full px-2 py-1 text-sm bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                          className="w-full px-2 py-1 text-sm bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
                         />
                       </div>
                       <div className="flex space-x-1">
@@ -558,7 +563,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             newMultipleDays[index].type = e.target.value as 'work' | 'time_off';
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="flex-1 px-2 py-1 text-xs bg-gray-600 border border-gray-500 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
+                          className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 text-white"
                         >
                           <option value="work">🏢</option>
                           <option value="time_off">🏖️</option>
@@ -569,7 +574,7 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
                             const newMultipleDays = multipleDays.filter((_, i) => i !== index);
                             setMultipleDays(newMultipleDays);
                           }}
-                          className="px-2 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          className="px-2 py-1 text-xs bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-md shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all"
                         >
                           🗑️
                         </button>
@@ -603,8 +608,8 @@ export default function TimeRecordForm({ onRecordAdded, userId, userName }: Time
           disabled={isSubmitting || (isMultipleMode && multipleDays.length === 0)}
           className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
             isSubmitting || (isMultipleMode && multipleDays.length === 0)
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
+              : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
           }`}
         >
           {isSubmitting
