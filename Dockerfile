@@ -7,12 +7,9 @@ WORKDIR /usr/src/app
 # Stage 2: Install - Instalar dependências com cache
 FROM base AS install
 RUN mkdir -p /temp/dev
-COPY package.json bun.lockb* /temp/dev/
+COPY package.json bun.lock* /temp/dev/
 RUN --mount=type=cache,target=/root/.bun/install/cache \
-    cd /temp/dev && bun install --frozen-lockfile \
-    && for pkg in protobufjs firebase-admin @firebase @swc/core unrs-resolver; do \
-       if [ -d "node_modules/$pkg" ]; then bun pm trust "$pkg"; fi; \
-    done
+    cd /temp/dev && bun install --frozen-lockfile
 
 # Stage 3: Prerelease - Build da aplicação
 FROM base AS prerelease
@@ -48,7 +45,6 @@ COPY --from=prerelease --chown=nextjs:nodejs /usr/src/app/.next/static ./.next/s
 
 # Copiar dependências necessárias manualmente
 COPY --from=install /temp/dev/node_modules/jose ./node_modules/jose
-COPY --from=install /temp/dev/node_modules/uncrypto ./node_modules/uncrypto
 
 USER nextjs
 
