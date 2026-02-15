@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,9 +11,41 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Verifica se estamos em um ambiente de build
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Lazy initialization - só inicializa quando necessário
+let _app: FirebaseApp | null = null;
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
 
-export default app;
+function getApp(): FirebaseApp {
+  if (isBuildTime) {
+    throw new Error('Firebase Client should not be initialized during build time');
+  }
+
+  if (!_app) {
+    _app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  }
+  return _app;
+}
+
+export const auth = new Proxy({} as Auth, {
+  get(_, prop) {
+    if (!_auth) {
+      _auth = getAuth(getApp());
+    }
+    return (_auth as any)[prop];
+  },
+});
+
+export const db = new Proxy({} as Firestore, {
+  get(_, prop) {
+    if (!_db) {
+      _db = getFirestore(getApp());
+    }
+    return (_db as any)[prop];
+  },
+});
+
+export default getApp;
