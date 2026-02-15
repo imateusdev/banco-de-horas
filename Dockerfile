@@ -29,12 +29,12 @@ ENV NODE_ENV=production
 RUN bun run build
 
 # Stage 5: Runner - Imagem final de produção
-FROM oven/bun:1-slim AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
-# Criar usuário não-root
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Criar usuário não-root (sintaxe Alpine Linux)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
