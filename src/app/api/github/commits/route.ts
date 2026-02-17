@@ -42,8 +42,12 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(date + 'T00:00:00Z');
       const endDate = new Date(date + 'T23:59:59Z');
 
+      // Determinar branch: preferência do usuário > branch do projeto (env) > sem filtro
+      const branch = settings.githubBranch || project.branch || null;
+
       // Buscar commits do GitHub API
-      const url = `https://api.github.com/repos/${githubRepo}/commits?author=${settings.githubUsername}&since=${startDate.toISOString()}&until=${endDate.toISOString()}`;
+      const branchParam = branch ? `&sha=${encodeURIComponent(branch)}` : '';
+      const url = `https://api.github.com/repos/${githubRepo}/commits?author=${settings.githubUsername}&since=${startDate.toISOString()}&until=${endDate.toISOString()}${branchParam}`;
 
       const response = await fetch(url, {
         headers: {
@@ -75,9 +79,10 @@ export async function GET(request: NextRequest) {
         return `- **[${sha}]** ${message} _(${time})_`;
       });
 
-      const markdown = formattedCommits.length > 0
-        ? `### 🔨 Commits do GitHub (${date})\n\n${formattedCommits.join('\n')}\n\n`
-        : '';
+      const markdown =
+        formattedCommits.length > 0
+          ? `### 🔨 Commits do GitHub (${date})\n\n${formattedCommits.join('\n')}\n\n`
+          : '';
 
       return Response.json({
         success: true,

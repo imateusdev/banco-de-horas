@@ -12,6 +12,7 @@ export function getGitHubProjects(): GitHubProject[] {
         name: p.name,
         repo: p.repo,
         token: p.token,
+        branch: p.branch || undefined,
       }));
     } catch (error) {
       console.error('Error parsing GITHUB_PROJECTS:', error);
@@ -21,6 +22,7 @@ export function getGitHubProjects(): GitHubProject[] {
   // Fallback para configuração de projeto único
   const singleToken = process.env.GITHUB_TOKEN;
   const singleRepo = process.env.GITHUB_REPO;
+  const singleBranch = process.env.GITHUB_BRANCH;
 
   if (singleToken && singleRepo) {
     return [
@@ -29,6 +31,7 @@ export function getGitHubProjects(): GitHubProject[] {
         name: singleRepo.split('/')[1] || 'Default Project',
         repo: singleRepo,
         token: singleToken,
+        branch: singleBranch || undefined,
       },
     ];
   }

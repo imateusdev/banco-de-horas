@@ -77,6 +77,7 @@ export interface UserSettings {
   workingDays: 'weekdays' | 'all' | 'weekends';
   githubUsername: string | null;
   githubProjectId: string | null;
+  githubBranch: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,4 +107,5 @@ export interface GitHubProject {
   name: string;
   repo: string;
   token: string;
+  branch?: string;
 }

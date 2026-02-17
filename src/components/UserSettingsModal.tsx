@@ -17,6 +17,7 @@ interface UserSettings {
   workingDays: 'weekdays' | 'all' | 'weekends';
   githubUsername: string | null;
   githubProjectId: string | null;
+  githubBranch: string | null;
 }
 
 interface GitHubProject {
@@ -40,6 +41,7 @@ export default function UserSettingsModal({
     workingDays: 'weekdays',
     githubUsername: null,
     githubProjectId: null,
+    githubBranch: null,
   });
   const [error, setError] = useState('');
   const [githubProjects, setGithubProjects] = useState<GitHubProject[]>([]);
@@ -52,6 +54,7 @@ export default function UserSettingsModal({
         workingDays: data.workingDays,
         githubUsername: data.githubUsername,
         githubProjectId: data.githubProjectId,
+        githubBranch: data.githubBranch,
       });
     }
   }, [data]);
@@ -94,6 +97,7 @@ export default function UserSettingsModal({
         workingDays: settings.workingDays,
         githubUsername: settings.githubUsername || null,
         githubProjectId: settings.githubProjectId || null,
+        githubBranch: settings.githubBranch || null,
       });
       onSettingsUpdated?.();
       onClose();
@@ -215,7 +219,9 @@ export default function UserSettingsModal({
                       </label>
                       <select
                         value={settings.githubProjectId || ''}
-                        onChange={(e) => handleInputChange('githubProjectId', e.target.value || null)}
+                        onChange={(e) =>
+                          handleInputChange('githubProjectId', e.target.value || null)
+                        }
                         className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white [&>option]:bg-[#1a1a1a] [&>option]:text-white"
                       >
                         <option value="">Selecione um projeto</option>
@@ -243,6 +249,22 @@ export default function UserSettingsModal({
                     />
                     <p className="text-xs text-neutral-400 mt-2">
                       Configure seu username para importar commits automaticamente nas descrições
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">
+                      Branch monitorada (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.githubBranch || ''}
+                      onChange={(e) => handleInputChange('githubBranch', e.target.value || null)}
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-white"
+                      placeholder="main"
+                    />
+                    <p className="text-xs text-neutral-400 mt-2">
+                      Filtra commits de uma branch específica. Se vazio, busca commits de todas as
+                      branches
                     </p>
                   </div>
                 </div>

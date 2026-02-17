@@ -177,6 +177,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings | nu
     workingDays: data.workingDays,
     githubUsername: data.githubUsername || null,
     githubProjectId: data.githubProjectId || null,
+    githubBranch: data.githubBranch || null,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   };
@@ -202,6 +203,7 @@ export async function createOrUpdateUserSettings(
       defaultEndTime: settings.defaultEndTime || null,
       githubUsername: settings.githubUsername || null,
       githubProjectId: settings.githubProjectId || null,
+      githubBranch: settings.githubBranch || null,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
@@ -532,10 +534,7 @@ export async function getAIReport(reportId: string): Promise<AIReport | null> {
   };
 }
 
-export async function getExistingAIReport(
-  userId: string,
-  month: string
-): Promise<AIReport | null> {
+export async function getExistingAIReport(userId: string, month: string): Promise<AIReport | null> {
   const snapshot = await adminDb
     .collection('aiReports')
     .where('userId', '==', userId)
