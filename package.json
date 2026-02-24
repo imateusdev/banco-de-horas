@@ -8,7 +8,7 @@
     "url": "https://github.com/imateusdev/banco-de-horas"
   },
   "scripts": {
-    "dev": "bun --bun next dev --turbo",
+    "dev": "bun --bun next dev",
     "build": "bun --bun next build",
     "start": "bun --bun next start",
     "lint": "eslint .",
