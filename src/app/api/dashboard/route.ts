@@ -52,14 +52,17 @@ export async function GET(request: NextRequest) {
       workingDays: new Set(monthlyRecords.map((r) => r.date)).size,
     };
 
-    const allExtraHours = timeRecords.reduce((sum, record) => {
+    const processedMonths = new Set<string>();
+    let allExtraHours = 0;
+    for (const record of timeRecords) {
       const recordMonth = record.date.substring(0, 7);
+      if (processedMonths.has(recordMonth)) continue;
+      processedMonths.add(recordMonth);
       const goal = recordMonth === selectedMonth ? monthlyGoal : 176;
       const monthRecords = timeRecords.filter((r) => r.date.startsWith(recordMonth));
       const monthTotal = monthRecords.reduce((s, r) => s + r.totalHours, 0);
-      const monthExtra = Math.max(0, monthTotal - goal);
-      return sum + monthExtra;
-    }, 0);
+      allExtraHours += Math.max(0, monthTotal - goal);
+    }
 
     const convertedToMoney = hourConversions
       .filter((c) => c.type === 'money')
