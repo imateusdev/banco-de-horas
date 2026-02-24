@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { timeUtils } from '@/lib/calculations';
 import { HourConversion } from '@/types';
 import { useCreateHourConversion, useDashboardData } from '@/hooks/useQueries';
+import { validateConversionForm } from '@/lib/conversion-validation';
 
 interface HourConversionFormProps {
   userId: string;
@@ -30,66 +31,51 @@ export default function HourConversionForm({ userId, onConversionAdded }: HourCo
   const accumulatedHours = data?.accumulatedHours || null;
   const isSubmitting = createConversion.isPending;
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.hours || parseFloat(formData.hours) <= 0) {
-      newErrors.hours = 'Quantidade de horas deve ser maior que zero';
-    } else if (accumulatedHours && parseFloat(formData.hours) > accumulatedHours.availableHours) {
-      newErrors.hours = `Máximo disponível: ${timeUtils.formatHours(accumulatedHours.availableHours)}`;
-    }
+      const newErrors = validateConversionForm(formData, accumulatedHours);
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
 
-    if (formData.type === 'money' && (!formData.amount || parseFloat(formData.amount) <= 0)) {
-      newErrors.amount = 'Valor em dinheiro deve ser maior que zero';
-    }
+      try {
+        const conversion = {
+          id: timeUtils.generateId(),
+          userId,
+          hours: parseFloat(formData.hours),
+          amount: formData.type === 'money' ? parseFloat(formData.amount) : 0,
+          type: formData.type,
+          date: timeUtils.getCurrentDate(),
+          createdAt: new Date().toISOString(),
+        } as HourConversion;
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+        await createConversion.mutateAsync(conversion);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+        setFormData({
+          hours: '',
+          amount: '',
+          type: 'money',
+        });
 
-    if (!validateForm()) {
-      return;
-    }
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
 
-    try {
-      const conversion = {
-        id: timeUtils.generateId(),
-        userId,
-        hours: parseFloat(formData.hours),
-        amount: formData.type === 'money' ? parseFloat(formData.amount) : 0,
-        type: formData.type,
-        date: timeUtils.getCurrentDate(),
-        createdAt: new Date().toISOString(),
-      } as HourConversion;
+        onConversionAdded?.();
+      } catch (error) {
+        console.error('Error saving conversion:', error);
+        setErrors({ submit: 'Erro ao salvar conversão. Tente novamente.' });
+      }
+    },
+    [formData, accumulatedHours]
+  );
 
-      await createConversion.mutateAsync(conversion);
-
-      setFormData({
-        hours: '',
-        amount: '',
-        type: 'money',
-      });
-
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-
-      onConversionAdded?.();
-    } catch (error) {
-      console.error('Error saving conversion:', error);
-      setErrors({ submit: 'Erro ao salvar conversão. Tente novamente.' });
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-    }
-  };
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev));
+  }, []);
 
   if (loading) {
     return (

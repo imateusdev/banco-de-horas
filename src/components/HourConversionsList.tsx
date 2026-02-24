@@ -2,34 +2,10 @@
 
 import { useHourConversions } from '@/hooks/useQueries';
 import { HourConversion } from '@/types';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 interface HourConversionsListProps {
   userId: string;
-}
-
-function getStatusBadge(status: string) {
-  switch (status) {
-    case 'pending':
-      return (
-        <span className="text-xs px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-          ⏳ Pendente
-        </span>
-      );
-    case 'approved':
-      return (
-        <span className="text-xs px-3 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
-          ✓ Aprovado
-        </span>
-      );
-    case 'rejected':
-      return (
-        <span className="text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-          ✗ Rejeitado
-        </span>
-      );
-    default:
-      return null;
-  }
 }
 
 export default function HourConversionsList({ userId }: HourConversionsListProps) {
@@ -81,7 +57,7 @@ export default function HourConversionsList({ userId }: HourConversionsListProps
                 >
                   {conversion.type === 'money' ? '💰 Dinheiro' : '🏖️ Folga'}
                 </span>
-                {getStatusBadge(conversion.status)}
+                <StatusBadge status={conversion.status as 'pending' | 'approved' | 'rejected'} />
               </div>
               <span className="text-sm text-white/50">
                 {new Date(conversion.date).toLocaleDateString('pt-BR')}

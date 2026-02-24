@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCreateHourConversion, useDashboardData } from '@/hooks/useQueries';
 import { HourConversion } from '@/types';
 import { timeUtils } from '@/lib/calculations';
+import { validateConversionForm } from '@/lib/conversion-validation';
 
 interface AdminConversionModalProps {
   userId: string;
@@ -45,41 +46,36 @@ export default function AdminConversionModal({
     }
   }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.hours || parseFloat(formData.hours) <= 0) {
-      setError('Quantidade de horas deve ser maior que zero');
-      return;
-    }
+      const errors = validateConversionForm(formData, accumulatedHours);
+      const firstError = errors.hours || errors.amount;
+      if (firstError) {
+        setError(firstError);
+        return;
+      }
 
-    if (accumulatedHours && parseFloat(formData.hours) > accumulatedHours.availableHours) {
-      setError(`Máximo disponível: ${timeUtils.formatHours(accumulatedHours.availableHours)}`);
-      return;
-    }
+      try {
+        const conversion = {
+          id: timeUtils.generateId(),
+          userId,
+          hours: parseFloat(formData.hours),
+          amount: formData.type === 'money' ? parseFloat(formData.amount) : 0,
+          type: formData.type,
+          date: timeUtils.getCurrentDate(),
+          createdAt: new Date().toISOString(),
+        } as HourConversion;
 
-    if (formData.type === 'money' && (!formData.amount || parseFloat(formData.amount) <= 0)) {
-      setError('Valor em dinheiro deve ser maior que zero');
-      return;
-    }
-
-    try {
-      const conversion = {
-        id: timeUtils.generateId(),
-        userId,
-        hours: parseFloat(formData.hours),
-        amount: formData.type === 'money' ? parseFloat(formData.amount) : 0,
-        type: formData.type,
-        date: timeUtils.getCurrentDate(),
-        createdAt: new Date().toISOString(),
-      } as HourConversion;
-
-      await createConversion.mutateAsync(conversion);
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar conversão');
-    }
-  };
+        await createConversion.mutateAsync(conversion);
+        onClose();
+      } catch (err: any) {
+        setError(err.message || 'Erro ao salvar conversão');
+      }
+    },
+    [formData, accumulatedHours, onClose]
+  );
 
   if (!isOpen) return null;
 

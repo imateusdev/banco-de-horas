@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import {
@@ -52,73 +52,80 @@ export default function AppSidebar({
   const { data: pendingData } = usePendingApprovals(isAdmin || false);
   const pendingCount = pendingData?.total || 0;
 
-  const links = [
-    {
-      label: 'Dashboard',
-      href: '#',
-      icon: (
-        <LayoutDashboard
-          className={cn(
-            'h-6 w-6 shrink-0',
-            activeTab === 'dashboard' ? 'text-blue-400' : 'text-neutral-400'
-          )}
-        />
-      ),
-      id: 'dashboard' as const,
-    },
-    {
-      label: 'Registrar',
-      href: '#',
-      icon: (
-        <Clock
-          className={cn(
-            'h-6 w-6 shrink-0',
-            activeTab === 'register' ? 'text-blue-400' : 'text-neutral-400'
-          )}
-        />
-      ),
-      id: 'register' as const,
-    },
-    {
-      label: 'Meta',
-      href: '#',
-      icon: (
-        <Target
-          className={cn(
-            'h-6 w-6 shrink-0',
-            activeTab === 'goal' ? 'text-blue-400' : 'text-neutral-400'
-          )}
-        />
-      ),
-      id: 'goal' as const,
-    },
-    {
-      label: 'Converter Horas',
-      href: '#',
-      icon: (
-        <DollarSign
-          className={cn(
-            'h-6 w-6 shrink-0',
-            activeTab === 'conversion' ? 'text-blue-400' : 'text-neutral-400'
-          )}
-        />
-      ),
-      id: 'conversion' as const,
-    },
-    {
-      label: 'Histórico',
-      href: '#',
-      icon: (
-        <History
-          className={cn(
-            'h-6 w-6 shrink-0',
-            activeTab === 'history' ? 'text-blue-400' : 'text-neutral-400'
-          )}
-        />
-      ),
-      id: 'history' as const,
-    },
-  ];
+  const links = useMemo(
+    () => [
+      {
+        label: 'Dashboard',
+        href: '#',
+        icon: (
+          <LayoutDashboard
+            className={cn(
+              'h-6 w-6 shrink-0',
+              activeTab === 'dashboard' ? 'text-blue-400' : 'text-neutral-400'
+            )}
+          />
+        ),
+        id: 'dashboard' as const,
+      },
+      {
+        label: 'Registrar',
+        href: '#',
+        icon: (
+          <Clock
+            className={cn(
+              'h-6 w-6 shrink-0',
+              activeTab === 'register' ? 'text-blue-400' : 'text-neutral-400'
+            )}
+          />
+        ),
+        id: 'register' as const,
+      },
+      {
+        label: 'Meta',
+        href: '#',
+        icon: (
+          <Target
+            className={cn(
+              'h-6 w-6 shrink-0',
+              activeTab === 'goal' ? 'text-blue-400' : 'text-neutral-400'
+            )}
+          />
+        ),
+        id: 'goal' as const,
+      },
+      {
+        label: 'Converter Horas',
+        href: '#',
+        icon: (
+          <DollarSign
+            className={cn(
+              'h-6 w-6 shrink-0',
+              activeTab === 'conversion' ? 'text-blue-400' : 'text-neutral-400'
+            )}
+          />
+        ),
+        id: 'conversion' as const,
+      },
+      {
+        label: 'Histórico',
+        href: '#',
+        icon: (
+          <History
+            className={cn(
+              'h-6 w-6 shrink-0',
+              activeTab === 'history' ? 'text-blue-400' : 'text-neutral-400'
+            )}
+          />
+        ),
+        id: 'history' as const,
+      },
+    ],
+    [activeTab]
+  );
+
+  const handleAdminRanking = useCallback(() => router.push('/admin/ranking'), [router]);
+  const handleAdminApprovals = useCallback(() => router.push('/admin/approvals'), [router]);
+  const handleAdminReports = useCallback(() => router.push('/admin/reports'), [router]);
 
   return (
     <Sidebar open={open} setOpen={setOpen}>
@@ -166,7 +173,7 @@ export default function AppSidebar({
                   href: '#',
                   icon: <Trophy className="text-neutral-400 h-6 w-6 shrink-0" />,
                 }}
-                onClick={() => router.push('/admin/ranking')}
+                onClick={handleAdminRanking}
               />
               <SidebarLink
                 link={{
@@ -183,7 +190,7 @@ export default function AppSidebar({
                     </div>
                   ),
                 }}
-                onClick={() => router.push('/admin/approvals')}
+                onClick={handleAdminApprovals}
               />
               <SidebarLink
                 link={{
@@ -191,7 +198,7 @@ export default function AppSidebar({
                   href: '#',
                   icon: <FileText className="text-neutral-400 h-6 w-6 shrink-0" />,
                 }}
-                onClick={() => router.push('/admin/reports')}
+                onClick={handleAdminReports}
               />
             </>
           )}

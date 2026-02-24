@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { timeUtils } from '@/lib/calculations';
+import { formatDateLong, formatMonth } from '@/lib/date-utils';
 import { useDashboardData } from '@/hooks/useQueries';
 
 interface StatsDashboardProps {
@@ -19,47 +20,17 @@ export default function StatsDashboard({ userId }: StatsDashboardProps) {
   const monthlyStats = data?.monthlyStats || null;
   const accumulatedHours = data?.accumulatedHours || null;
 
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  const progressPercentage = useMemo(() => {
+    if (!monthlyStats || monthlyStats.goal === 0) return 0;
+    return Math.min((monthlyStats.totalHours / monthlyStats.goal) * 100, 100);
+  }, [monthlyStats]);
 
-  const formatMonth = (monthStr: string): string => {
-    const [year, month] = monthStr.split('-');
-    const monthNames = [
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro',
-    ];
-
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
-  };
-
-  const getProgressPercentage = (current: number, goal: number): number => {
-    if (goal === 0) return 0;
-    return Math.min((current / goal) * 100, 100);
-  };
-
-  const getProgressBarColor = (percentage: number): string => {
-    if (percentage >= 100) return 'bg-green-500';
-    if (percentage >= 75) return 'bg-blue-500';
-    if (percentage >= 50) return 'bg-yellow-500';
+  const progressBarColor = useMemo(() => {
+    if (progressPercentage >= 100) return 'bg-green-500';
+    if (progressPercentage >= 75) return 'bg-blue-500';
+    if (progressPercentage >= 50) return 'bg-yellow-500';
     return 'bg-red-500';
-  };
+  }, [progressPercentage]);
 
   if (loading) {
     return (
@@ -120,7 +91,7 @@ export default function StatsDashboard({ userId }: StatsDashboardProps) {
         </div>
 
         <div className="text-center">
-          <p className="text-sm text-neutral-400 mb-2">{formatDate(selectedDate)}</p>
+          <p className="text-sm text-neutral-400 mb-2">{formatDateLong(selectedDate)}</p>
           <div className="text-4xl font-bold text-blue-400 mb-4">
             {dailyStats ? timeUtils.formatHours(dailyStats.totalHours) : '0h'}
           </div>
@@ -190,6 +161,7 @@ export default function StatsDashboard({ userId }: StatsDashboardProps) {
 
         <div className="text-center mb-6">
           <p className="text-sm text-neutral-400 mb-2">{formatMonth(selectedMonth)}</p>
+
           <div className="text-4xl font-bold text-purple-400 mb-2">
             {monthlyStats ? timeUtils.formatHours(monthlyStats.totalHours) : '0h'}
           </div>
@@ -211,20 +183,15 @@ export default function StatsDashboard({ userId }: StatsDashboardProps) {
 
             <div className="w-full bg-white/5 rounded-full h-4">
               <div
-                className={`h-4 rounded-full transition-all duration-300 ${getProgressBarColor(
-                  getProgressPercentage(monthlyStats.totalHours, monthlyStats.goal)
-                )}`}
+                className={`h-4 rounded-full transition-all duration-300 ${progressBarColor}`}
                 style={{
-                  width: `${getProgressPercentage(monthlyStats.totalHours, monthlyStats.goal)}%`,
+                  width: `${progressPercentage}%`,
                 }}
               ></div>
             </div>
 
             <div className="flex justify-between text-sm text-neutral-400">
-              <span>
-                {getProgressPercentage(monthlyStats.totalHours, monthlyStats.goal).toFixed(1)}% da
-                meta
-              </span>
+              <span>{progressPercentage.toFixed(1)}% da meta</span>
               <span>Meta: {timeUtils.formatHours(monthlyStats.goal)}</span>
             </div>
 

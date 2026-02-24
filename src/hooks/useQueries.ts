@@ -41,8 +41,9 @@ export function useDashboardData(userId: string, date: string, month: string) {
     enabled: !!userId,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
-    refetchOnMount: 'always',
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData: any) => previousData,
   });
 }
 

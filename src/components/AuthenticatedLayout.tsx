@@ -5,24 +5,50 @@ import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import ModernBackground from '@/components/ModernBackground';
 import { cn } from '@/lib/utils';
-import { useEffect, ReactNode } from 'react';
+import { useEffect, useCallback, ReactNode } from 'react';
+
+const TAB_ROUTES = {
+  dashboard: '/dashboard',
+  register: '/registrar',
+  goal: '/meta',
+  conversion: '/converter',
+  history: '/historico',
+} as const;
 
 interface AuthenticatedLayoutProps {
   children: ReactNode | ((user: any) => ReactNode);
-  activeTab: 'dashboard' | 'register' | 'goal' | 'conversion' | 'history';
+  activeTab?: 'dashboard' | 'register' | 'goal' | 'conversion' | 'history';
+  adminOnly?: boolean;
+  loading?: boolean;
 }
 
-export default function AuthenticatedLayout({ children, activeTab }: AuthenticatedLayoutProps) {
+export default function AuthenticatedLayout({
+  children,
+  activeTab = 'dashboard',
+  adminOnly = false,
+  loading = false,
+}: AuthenticatedLayoutProps) {
   const { user, loading: authLoading, isAdmin, signOut } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authLoading) return;
+    if (!user || (adminOnly && !isAdmin)) {
       router.push('/');
     }
-  }, [user, authLoading, router]);
+  }, [user, isAdmin, authLoading, adminOnly, router]);
 
-  if (authLoading) {
+  const handleTabChange = useCallback(
+    (tab: keyof typeof TAB_ROUTES) => {
+      router.push(TAB_ROUTES[tab]);
+    },
+    [router]
+  );
+
+  const handleAdminClick = useCallback(() => router.push('/admin/users'), [router]);
+  const handleLogout = useCallback(() => signOut(), [signOut]);
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#020202] flex items-center justify-center">
         <ModernBackground />
@@ -33,7 +59,7 @@ export default function AuthenticatedLayout({ children, activeTab }: Authenticat
     );
   }
 
-  if (!user) {
+  if (!user || (adminOnly && !isAdmin)) {
     return null;
   }
 
@@ -42,22 +68,13 @@ export default function AuthenticatedLayout({ children, activeTab }: Authenticat
       <ModernBackground />
       <AppSidebar
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          const routes = {
-            dashboard: '/dashboard',
-            register: '/registrar',
-            goal: '/meta',
-            conversion: '/converter',
-            history: '/historico',
-          };
-          router.push(routes[tab]);
-        }}
+        onTabChange={handleTabChange}
         user={user}
         isAdmin={isAdmin}
-        onAdminClick={() => router.push('/admin/users')}
-        onLogout={() => signOut()}
+        onAdminClick={handleAdminClick}
+        onLogout={handleLogout}
       />
-      <div className="flex-1 md:ml-[280px] overflow-auto relative z-10">
+      <div className="flex-1 md:ml-70 overflow-auto relative z-10">
         <main className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full min-h-screen">
           {typeof children === 'function' ? children(user) : children}
         </main>
