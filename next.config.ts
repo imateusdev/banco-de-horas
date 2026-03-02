@@ -8,13 +8,6 @@ const nextConfig: NextConfig = {
   // Eliminates need for manual useMemo/useCallback in most cases
   reactCompiler: true,
 
-  experimental: {
-    // Turbopack filesystem cache: speeds up subsequent builds
-    // (stable for dev, experimental for build)
-    turbopackFileSystemCacheForDev: true,
-    turbopackFileSystemCacheForBuild: true,
-  },
-
   // Configure headers for production
   async headers() {
     return [

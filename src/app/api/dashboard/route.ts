@@ -3,6 +3,7 @@ import { withAuth, getQueryParam } from '@/lib/server/api-helpers';
 import {
   getTimeRecordsByUser,
   getUserMonthlyGoal,
+  getUserMonthlyGoals,
   getUserHourConversions,
 } from '@/lib/server/firestore';
 import { timeUtils } from '@/lib/calculations';
@@ -25,11 +26,16 @@ export async function GET(request: NextRequest) {
     const selectedDate = getQueryParam(req, 'date') || timeUtils.getCurrentDate();
     const selectedMonth = getQueryParam(req, 'month') || timeUtils.getCurrentMonth();
 
-    const [timeRecords, monthlyGoal, hourConversions] = await Promise.all([
+    const [timeRecords, monthlyGoal, allMonthlyGoals, hourConversions] = await Promise.all([
       getTimeRecordsByUser(userId),
       getUserMonthlyGoal(userId, selectedMonth),
+      getUserMonthlyGoals(userId),
       getUserHourConversions(userId),
     ]);
+
+    const monthlyGoalsMap = new Map(
+      allMonthlyGoals.filter((g) => g.status === 'approved').map((g) => [g.month, g.hoursGoal])
+    );
 
     const dailyRecords = timeRecords.filter((r) => r.date === selectedDate);
     const totalHoursDay = dailyRecords.reduce((sum, r) => sum + r.totalHours, 0);
@@ -58,7 +64,7 @@ export async function GET(request: NextRequest) {
       const recordMonth = record.date.substring(0, 7);
       if (processedMonths.has(recordMonth)) continue;
       processedMonths.add(recordMonth);
-      const goal = recordMonth === selectedMonth ? monthlyGoal : 176;
+      const goal = monthlyGoalsMap.get(recordMonth) ?? 176;
       const monthRecords = timeRecords.filter((r) => r.date.startsWith(recordMonth));
       const monthTotal = monthRecords.reduce((s, r) => s + r.totalHours, 0);
       allExtraHours += Math.max(0, monthTotal - goal);
